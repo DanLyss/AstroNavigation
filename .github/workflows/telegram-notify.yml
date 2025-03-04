@@ -24,16 +24,15 @@ jobs:
           GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
 
         run: |
-
           MESSAGE="🚀 *GitHub Update:*%0A"
-          MESSAGE+="*Repository:* $(escape_markdown "${GITHUB_REPO}")%0A"
-          MESSAGE+="👤 *Author:* $(escape_markdown "${GITHUB_ACTOR}")%0A%0A"
+          MESSAGE+="*Repository:* ${GITHUB_REPO}%0A"
+          MESSAGE+="👤 *Author:* ${GITHUB_ACTOR}%0A%0A"
 
           if [ "$GITHUB_EVENT" = "push" ]; then
-            MESSAGE+="📝 *Commit Message:* $(escape_markdown "${GITHUB_COMMIT_MESSAGE}")%0A"
+            MESSAGE+="📝 *Commit Message:* ${GITHUB_COMMIT_MESSAGE}%0A"
             MESSAGE+="🔗 [View Repository](https://github.com/${GITHUB_REPO})"
           elif [ "$GITHUB_EVENT" = "pull_request" ]; then
-            MESSAGE+="📌 *Pull Request Title:* $(escape_markdown "${GITHUB_PR_TITLE}")%0A"
+            MESSAGE+="📌 *Pull Request Title:* ${GITHUB_PR_TITLE}%0A"
             MESSAGE+="🔗 [View PR](${GITHUB_PR_URL})"
           fi
 
