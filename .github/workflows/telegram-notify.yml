@@ -24,20 +24,21 @@ jobs:
           GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
 
         run: |
-          MESSAGE="🚀 *GitHub Update:*\n"
-          if [ "$GITHUB_EVENT" = "push" ]; then
+          MESSAGE="🚀 *GitHub Update:*\n\n"
+
+          if [ \"$GITHUB_EVENT\" = \"push\" ]; then
             MESSAGE+="*New Commit in ${GITHUB_REPO}*\n"
-            MESSAGE+="👤 Author: ${GITHUB_ACTOR}\n"
-            MESSAGE+="📝 Message: ${GITHUB_COMMIT_MESSAGE}\n"
+            MESSAGE+="👤 *Author:* ${GITHUB_ACTOR}\n"
+            MESSAGE+="📝 *Message:* ${GITHUB_COMMIT_MESSAGE//&/\\&}\n\n"
             MESSAGE+="🔗 [View Repository](https://github.com/${GITHUB_REPO})"
-          elif [ "$GITHUB_EVENT" = "pull_request" ]; then
+          elif [ \"$GITHUB_EVENT\" = \"pull_request\" ]; then
             MESSAGE+="*Pull Request in ${GITHUB_REPO}*\n"
-            MESSAGE+="👤 Author: ${GITHUB_ACTOR}\n"
-            MESSAGE+="📌 Title: ${GITHUB_PR_TITLE}\n"
+            MESSAGE+="👤 *Author:* ${GITHUB_ACTOR}\n"
+            MESSAGE+="📌 *Title:* ${GITHUB_PR_TITLE//&/\\&}\n\n"
             MESSAGE+="🔗 [View PR](${GITHUB_PR_URL})"
           fi
 
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "text=${MESSAGE}" \
-            -d "parse_mode=Markdown"
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MESSAGE}" \
+            -d "parse_mode=MarkdownV2"
