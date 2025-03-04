@@ -24,13 +24,10 @@ jobs:
           GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
 
         run: |
-          escape_markdown() {
-            echo "$1" | sed -E 's/([_*\[\]()~`>#+=\-|{}.!])/\\\1/g'
-          }
 
           MESSAGE="🚀 *GitHub Update:*%0A"
           MESSAGE+="*Repository:* $(escape_markdown "${GITHUB_REPO}")%0A"
-          MESSAGE+="👤 *Author:* $(escape_markdown "${GITHUB_ACTOR}")%0A"
+          MESSAGE+="👤 *Author:* $(escape_markdown "${GITHUB_ACTOR}")%0A%0A"
 
           if [ "$GITHUB_EVENT" = "push" ]; then
             MESSAGE+="📝 *Commit Message:* $(escape_markdown "${GITHUB_COMMIT_MESSAGE}")%0A"
