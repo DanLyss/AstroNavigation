@@ -24,21 +24,23 @@ jobs:
           GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
 
         run: |
-          MESSAGE="🚀 *GitHub Update:*\n\n"
+          escape_markdown() {
+            echo "$1" | sed -E 's/([_*\[\]()~`>#+\-=|{}.!])/\\\1/g'
+          }
 
-          if [ \"$GITHUB_EVENT\" = \"push\" ]; then
-            MESSAGE+="*New Commit in ${GITHUB_REPO}*\n"
-            MESSAGE+="👤 *Author:* ${GITHUB_ACTOR}\n"
-            MESSAGE+="📝 *Message:* ${GITHUB_COMMIT_MESSAGE//&/\\&}\n\n"
+          MESSAGE="🚀 *GitHub Update:*%0A"
+          MESSAGE+="*Repository:* $(escape_markdown "${GITHUB_REPO}")%0A"
+          MESSAGE+="👤 *Author:* $(escape_markdown "${GITHUB_ACTOR}")%0A"
+
+          if [ "$GITHUB_EVENT" = "push" ]; then
+            MESSAGE+="📝 *Commit Message:* $(escape_markdown "${GITHUB_COMMIT_MESSAGE}")%0A"
             MESSAGE+="🔗 [View Repository](https://github.com/${GITHUB_REPO})"
-          elif [ \"$GITHUB_EVENT\" = \"pull_request\" ]; then
-            MESSAGE+="*Pull Request in ${GITHUB_REPO}*\n"
-            MESSAGE+="👤 *Author:* ${GITHUB_ACTOR}\n"
-            MESSAGE+="📌 *Title:* ${GITHUB_PR_TITLE//&/\\&}\n\n"
+          elif [ "$GITHUB_EVENT" = "pull_request" ]; then
+            MESSAGE+="📌 *Pull Request Title:* $(escape_markdown "${GITHUB_PR_TITLE}")%0A"
             MESSAGE+="🔗 [View PR](${GITHUB_PR_URL})"
           fi
 
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MESSAGE}" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MESSAGE}" \
             -d "parse_mode=MarkdownV2"
