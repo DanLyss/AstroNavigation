@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - workspace
   pull_request:
     types: [opened, closed]
 
