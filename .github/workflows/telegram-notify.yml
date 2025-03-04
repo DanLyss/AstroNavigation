@@ -25,7 +25,7 @@ jobs:
 
         run: |
           escape_markdown() {
-            echo "$1" | sed -E 's/([_*\[\]()~`>#+\-=|{}.!])/\\\1/g'
+            echo "$1" | sed -E 's/([_*\[\]()~`>#+=\-|{}.!])/\\\1/g'
           }
 
           MESSAGE="🚀 *GitHub Update:*%0A"
