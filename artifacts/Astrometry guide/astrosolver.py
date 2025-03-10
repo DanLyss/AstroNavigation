@@ -6,7 +6,7 @@ from astropy.io import fits
 # 📌 Configure Paths
 wsl_mode = "wsl" if os.name == "nt" else ""  # Use WSL on Windows
 astrometry_path = "/usr/bin/solve-field"
-image_path = r"/mnt/c/Users/Dan/Downloads/photo_2023-08-17_00-00-37.jpg"  # Input image
+image_path = r"put_here_path_to_your_image"  # Input image
 
 # 🔹 Running `solve-field` on the image
 def run_solve_field():
