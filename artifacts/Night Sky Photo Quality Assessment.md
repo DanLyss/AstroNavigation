@@ -2,7 +2,7 @@
 
 ## Overview 🌌
 
-The quality of an average photo of the night sky is good enough for analysis. The stars captured in the images typically occupy 1-4 pixels, ensuring sufficient precision for subsequent calculations.
+The quality of an average photo of the night sky is good enough for analysis. The stars captured in the images typically occupy 1-4 pixels, ensuring sufficient precision for subsequent calculations. Astromery only able to recognize stars on the photos where sky is dark enough, so there is contsrast between the sky and the stars.
 
 ## Examples 📷
 
