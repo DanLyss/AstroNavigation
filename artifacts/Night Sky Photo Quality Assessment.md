@@ -8,13 +8,13 @@ The quality of an average photo of the night sky is good enough for analysis. Th
 
 Below are some example photos demonstrating the quality of night sky photography:
 
-1.  **Photo 1:**
+1.  **A clear night sky with visible stars, occupying minimal pixels, ensuring high accuracy in measurements:**
 ![A clear night sky with visible stars, occupying minimal pixels, ensuring high accuracy in measurements.](./Images/photo_2024-07-13_22-07-41.jpg)
 
     
-2.  **Photo 2:** ![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-28_00-16-51.jpg)
+2.  **A night sky with some obstructions but still maintaining good star visibility:** ![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-28_00-16-51.jpg)
     
-3.  **Photo 3:** ![A darker noisy image, yet still providing adequate detail for precision calculations.](./Images/photo_2024-08-27_22-47-37.jpg)
+3.  **A darker noisy image, yet still providing adequate detail for precision calculations:** ![A darker noisy image, yet still providing adequate detail for precision calculations.](./Images/photo_2024-08-27_22-47-37.jpg)
     
 
 ## Precision Considerations 🔍
