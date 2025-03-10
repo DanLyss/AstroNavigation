@@ -12,7 +12,7 @@ Below are some example photos demonstrating the quality of night sky photography
 ![A clear night sky with visible stars, occupying minimal pixels, ensuring high accuracy in measurements.](./Images/photo_2024-07-13_22-07-41.jpg)
 
     
-2.  **A night sky with some obstructions but still maintaining good star visibility:** ![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-28_00-16-51.jpg)
+2.  **A night sky with some obstructions but still maintaining good star visibility:** ![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-06_20-38-07.jpg)
     
 3.  **A darker noisy image, yet still providing adequate detail for precision calculations:** ![A darker noisy image, yet still providing adequate detail for precision calculations.](./Images/photo_2024-08-27_22-47-37.jpg)
     
