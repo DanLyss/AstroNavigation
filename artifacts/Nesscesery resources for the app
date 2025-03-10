@@ -1,0 +1,26 @@
+Running a Unix-Only Library on a Mobile App
+
+Overview 🛠️
+
+Our mobile application requires a library that is only available on Unix-based systems (astrometry). Since mobile devices run different operating system (Android), we need a strategy to integrate this library efficiently.
+
+Possible Solutions 🚀
+
+1. Using a Compatibility Layer 🏗️
+
+If the library is written in C/C++, we can use tools like Cygwin or WSL for Windows or cross-compilation for Android (NDK).
+
+For iOS, we may need jailbroken environments or an equivalent POSIX-compliant layer.
+
+3. Running a Unix Subsystem on Mobile 📲
+	Use Termux or a chrooted Linux environment to execute the Unix library.
+
+4. Cross-Compiling the Library 🔄
+
+Modify and compile the Unix library using Android NDK 
+
+This approach ensures local execution without network dependency.
+
+Recommended Approach ✅
+
+For the best balance of performance and maintainability, we most likely Cross-compile the library using the NDK.
