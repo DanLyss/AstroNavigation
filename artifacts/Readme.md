@@ -12,9 +12,6 @@ Precise marking of stars is essential. If the stars are identified with signific
 ## 4. Product Organization 📲💾
 A key consideration is whether the solution will be an independent local app or a remote service-based system. A local app must efficiently manage memory and computational resources, while a remote service can leverage powerful servers but requires stable connectivity. 
 
-## 5. Existing Solutions 🔄💡
-Before development an analysis of existing solutions should be conducted to avoid redundant efforts. If there are already tools that satisfy our constraints, leveraging them could save significant time and resources.
-
 
 # Artifacts Description 📜
 
@@ -22,4 +19,3 @@ Before development an analysis of existing solutions should be conducted to avoi
 ### 2. Research on gyroscopes operating on embedded in the phone sensors as a proof of high-quality photo's center positioning 📱
 ### 3. Astrometry - service of stars recognition with open source code 🌠
 ### 4. Calculations on necessary resources for the app and plan of possible app architecture ⚙️
-### 5. Research on existing services for celestial navigation (open source, otherwise not our competitors) 🛰️
