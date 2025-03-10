@@ -16,6 +16,8 @@ We have successfully tested **Astrometry** on a local PC, where it worked correc
 
 ## Conclusion 🎯
 
-By leveraging **Android NDK**, we can run **Astrometry** on Android while significantly reducing its storage footprint. Our initial tests show promising results, and further optimization will make this approach even better.
+By leveraging **Android NDK**, we can run **Astrometry** on Android while significantly reducing its storage footprint. Our initial tests show promising results, and further optimization will make this approach even better. 
+
+Overall project plan drawn as a scheme can be found [here](https://github.com/DanLyss/AstroNavigation/blob/main/artifacts/Project_Scheme.png)
 
 
