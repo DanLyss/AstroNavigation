@@ -12,6 +12,8 @@ Precise marking of stars is essential. If the stars are identified with signific
 ## 4. Product Organization 📲💾
 A key consideration is whether the solution will be an independent local app or a remote service-based system. A local app must efficiently manage memory and computational resources, while a remote service can leverage powerful servers but requires stable connectivity. 
 
+## 5. Underlying mathematics ✍️📖
+The most important part of the project is mathematical computations using some data accumulated from the photo. We need to ensure that underlying math methods we are using are actualy giving us right results, otherwise the whole project will not work correctly.
 
 # Artifacts Description 📜
 
@@ -19,3 +21,4 @@ A key consideration is whether the solution will be an independent local app or 
 ### 2. Research on gyroscopes operating on embedded in the phone sensors as a proof of high-quality photo's center positioning 📱
 ### 3. Astrometry - service of stars recognition with open source code 🌠
 ### 4. Calculations on necessary resources for the app and plan of possible app architecture ⚙️
+### 5. Formal mathematical proof that methods we are planning to use work properly 🧠
