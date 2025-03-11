@@ -1,4 +1,4 @@
-name: Notify Telegram on Commit or PR
+name: Notify Telegram on Commit
 
 on:
   push:
@@ -13,21 +13,20 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GITHUB_EVENT: ${{ github.event_name }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
           GITHUB_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          GITHUB_PR_TITLE: ${{ github.event.pull_request.title }}
-          GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
 
         run: |
-           MESSAGE="📝 ${GITHUB_COMMIT_MESSAGE}%0A"
-           MESSAGE+="🔗 [Commit](${GITHUB_COMMIT_URL}) by *${GITHUB_ACTOR}* in [${GITHUB_REPO}](https://github.com/${GITHUB_REPO})"
-           
+          GITHUB_COMMIT_URL="https://github.com/${GITHUB_REPO}/commit/${GITHUB_SHA}"
 
-           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-             -d "chat_id=${TELEGRAM_CHAT_ID}" \
-             -d "text=${MESSAGE}" \
-             -d "parse_mode=MarkdownV2" \
-             -d "disable_web_page_preview=true" \
-             -d "disable_notification=true"
+          MESSAGE="📝 ${GITHUB_COMMIT_MESSAGE}%0A"
+          MESSAGE+="🔗 [Commit](${GITHUB_COMMIT_URL}) by *${GITHUB_ACTOR}* in [${GITHUB_REPO}](https://github.com/${GITHUB_REPO})"
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MESSAGE}" \
+            -d "parse_mode=Markdown" \
+            -d "disable_web_page_preview=true" \
+            -d "disable_notification=true"
