@@ -1,4 +1,5 @@
-﻿# Night Sky Photo Quality Assessment
+
+# Night Sky Photo Quality Assessment
 
 ## Overview 🌌
 
@@ -6,15 +7,17 @@ The quality of an average photo of the night sky is good enough for analysis. Th
 
 ## Examples 📷
 
-Below are some example photos demonstrating the quality of night sky photography:
+Below are some example photos demonstrating the quality of night sky photography and graphical representation of their analysis via the **Astrometry**:
 
 1.  **A clear night sky with visible stars, occupying minimal pixels, ensuring high accuracy in measurements:**
-![A clear night sky with visible stars, occupying minimal pixels, ensuring high accuracy in measurements.](./Images/photo_2024-07-13_22-07-41.jpg)
+![1](./Images/photo_2024-08-27_22-47-3.jpg)
+![2](./Images/photo_2024-08-27_22-47-37-ngc.png)
 
     
-2.  **A night sky with some obstructions but still maintaining good star visibility:** ![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-06_20-38-07.jpg)
+2.  **A night sky with some obstructions but still maintaining good star visibility:** ![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-06_20-38-07.jpg)![A night sky with some obstructions but still maintaining good star visibility..](./Images/photo_2024-07-06_20-38-07-ngc.png)
     
-3.  **A darker noisy image, yet still providing adequate detail for precision calculations:** ![A darker noisy image, yet still providing adequate detail for precision calculations.](./Images/photo_2024-08-27_22-47-37.jpg)
+3.  **A darker noisy image, yet still providing adequate detail for precision calculations:** ![A darker noisy image, yet still providing adequate detail for precision calculations.](./Images/photo_2023-08-17_00-00-37.jpg)![A darker noisy image, yet still providing adequate detail for precision calculations.](./Images/photo_2023-08-17_00-00-37-ngc.png)
+
     
 
 ## Precision Considerations 🔍
@@ -29,5 +32,4 @@ Below are some example photos demonstrating the quality of night sky photography
 ## Conclusion ✅
 
 Given the resolution and quality of these images, they are suitable for further astronomical or scientific analysis. The small pixel footprint of the stars ensures that calculations related to position, brightness, and motion can be performed with high precision.
-
 
