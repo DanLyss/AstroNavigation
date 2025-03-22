@@ -28,9 +28,11 @@ class Solver:
         return median_value
 
 class Star:
-    def __init__(self, x_coord: float, y_coord: float, RA: float, dec: float):
-        self.x_coord = x_coord
-        self.y_coord = y_coord
+    def __init__(self, x_measured_coord: float, y_measured_coord: float, RA: float, dec: float):
+        self.x_measured_coord = x_measured_coord #in rotated coordinates
+        self.y_measured_coord = y_measured_coord
+        self.x_coord = None #in normally oriented in tangent plane coordinates (what we want)
+        self.y_coord = None
         self.RA = RA
         self.dec = dec
         self.Alt = None
@@ -88,6 +90,14 @@ class Star:
         )
         self.Az = np.arcsin((np.sin(c)*np.sin(z))/np.cos(self.Alt))
 
+    def set_normal_x_y(self, rotation_angle: float):
+        #rotation_angle is counterclockwise from (x, y)_measured to
+        # (x, y)_normal
+        cos_rot = np.cos(rotation_angle)
+        sin_rot = np.sin(rotation_angle)
+        self.x_coord = cos_rot * self.x_measured_coord + sin_rot * self.y_measured_coord
+        self.y_coord = - sin_rot * self.x_measured_coord + cos_rot * self.y_measured_coord
+
     def copy(self):
         #deepcopy
         return copy.deepcopy(self)
@@ -95,15 +105,14 @@ class Star:
     def __repr__(self):
         return f"Star(x_coord={self.x_coord}, y_coord={self.y_coord}, RA={self.RA}, dec={self.dec}, Alt={self.Alt}, Az={self.Az})"
 
-    def set_forall_stars_Alt_Az(self):
-        for star in self.stars:
-            star.set_Alt_Az(self.angular_x_size, self.angular_y_size, self.pix_length_x, self.pix_length_y, self.positional_angle)
 
 
 class Star_Cluster:
     def __init__(self, stars: list[Star],
-                 positional_angle: float):
+                 positional_angle: float, rotation_angle: float):
         self.stars = stars
+        self.rotation_angle = rotation_angle
+        self.set_normal_x_y_for_all_stars()
         #its preudo size, cause it actually doesn't matter
         #since all quantites are relative
         self.pix_length_x = 100
@@ -135,6 +144,9 @@ class Star_Cluster:
         for star in self.stars:
             star.set_Alt_Az(self.angular_x_size, self.angular_y_size,
                             self.pix_length_x / 2, self.pix_length_y / 2, self.positional_angle)
+    def set_normal_x_y_for_all_stars(self):
+        for star in self.stars:
+            star.set_normal_x_y(self.rotation_angle)
 
     def write_to_file(self, filename):
         with open(filename, 'w') as f:

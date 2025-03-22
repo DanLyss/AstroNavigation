@@ -35,7 +35,8 @@ class TestProjectionOnDatasets(unittest.TestCase):
                     (164 + 35/60 + 42/3600, 24 + 23/60 + 12/3600),
                     (175 + 47/60 + 33/3600, 23 + 58/60 + 33/3600)
                 ],
-                "positional_angle_deg": 30 + 29 / 60 + 59 / 3600
+                "positional_angle_deg": 30 + 29 / 60 + 59 / 3600,
+                "rotation_angle_deg" : 0
             },
             {
                "pixel_coords" : [(0, 0), (370, -44), (474, -64), (159, 372), (-432, 34), (-688, 12), (-575, -122), (-623, -351),
@@ -59,7 +60,8 @@ class TestProjectionOnDatasets(unittest.TestCase):
                     (109 + 23 / 60 + 14 / 3600, 45 + 30 / 60 + 13 / 3600),
                     (112 + 18 / 60 + 56 / 3600, 52 + 2 / 60 + 2 / 3600)
                 ],
-                "positional_angle_deg": 47 + 59 / 60 + 26 / 3600
+                "positional_angle_deg": 47 + 59 / 60 + 26 / 3600,
+                "rotation_angle_deg" : 0
             },
             {
                 "pixel_coords": [(0, 0), (80, 124), (527, -298), (-634, 269), (-344, 259),
@@ -83,7 +85,8 @@ class TestProjectionOnDatasets(unittest.TestCase):
                     (46 + 34 / 60 + 17 / 3600, 47 + 26 / 60 + 31 / 3600),
                     (58 + 29 / 60 + 52 / 3600, 39 + 29 / 60 + 9 / 3600)
                 ],
-                "positional_angle_deg": 50 + 52 / 60 + 27 / 3600
+                "positional_angle_deg": 50 + 52 / 60 + 27 / 3600,
+                "rotation_angle_deg" : 0
             },
             {
                 "pixel_coords": [(0, 0), (-336, -30), (-540, 80), (-532, 177),
@@ -108,7 +111,8 @@ class TestProjectionOnDatasets(unittest.TestCase):
                     (232 + 4 / 60 + 9 / 3600, 2 + 49 / 60 + 6 / 3600),
                     (229 + 29 / 60 + 13.7 / 3600, 7 + 24 / 60 + 6 / 3600)
                 ],
-                "positional_angle_deg": 13 + 21 / 60 + 49 / 3600
+                "positional_angle_deg": 13 + 21 / 60 + 49 / 3600,
+                "rotation_angle_deg" : 0
             }
         ]
 
@@ -127,7 +131,8 @@ class TestProjectionOnDatasets(unittest.TestCase):
                     stars.append(Star(x, y, np.deg2rad(ra_deg), np.deg2rad(dec_deg)))
 
                 pos_angle_rad = np.deg2rad(case["positional_angle_deg"])
-                cluster = Star_Cluster(stars, pos_angle_rad)
+                rotation_angle = np.deg2rad(case["rotation_angle_deg"])
+                cluster = Star_Cluster(stars, pos_angle_rad, rotation_angle)
 
                 true_vals = np.array(case["AzAlt_deg"])
                 computed_vals = np.array([
