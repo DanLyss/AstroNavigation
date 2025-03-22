@@ -109,18 +109,20 @@
                 geolocation: geoData
             };
 
-            // Скачивание фото
-            const imgLink = document.createElement('a');
-            imgLink.href = URL.createObjectURL(imageBlob);
-            imgLink.download = 'photo.jpg';
-            imgLink.click();
-
-            // Скачивание json
             const jsonBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
-            const jsonLink = document.createElement('a');
-            jsonLink.href = URL.createObjectURL(jsonBlob);
-            jsonLink.download = 'photo_meta.json';
-            jsonLink.click();
+
+        const formData = new FormData();
+        formData.append('image', imageBlob, 'photo.jpg');
+        formData.append('metadata', jsonBlob, 'photo_meta.json');
+
+        await fetch('https://astro-photo-server.onrender.com/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        alert('✅ Фото и метаданные отправлены на сервер!');
+
+
 
             btn.disabled = false;
             btn.textContent = 'Photo!';
