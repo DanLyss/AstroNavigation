@@ -38,6 +38,37 @@ def list_files():
     files = sorted(os.listdir(UPLOAD_FOLDER), reverse=True)
     return jsonify(files)
 
+@app.route("/gallery")
+def gallery():
+    files = sorted(os.listdir(UPLOAD_FOLDER), reverse=True)
+    items = ""
+
+    for file in files:
+        if file.endswith("_photo.jpg"):
+            meta_file = file.replace("_photo.jpg", "_meta.json")
+            photo_url = f"/files/{file}"
+            meta_url = f"/files/{meta_file}"
+            items += f"""
+                <div style='margin-bottom: 2em; text-align:center;'>
+                    <img src='{photo_url}' style='max-width:90%; border-radius:10px; box-shadow: 0 0 10px #fff;'/><br/>
+                    <a href='{photo_url}' download style='margin-right:1em;'>📸 Скачать фото</a>
+                    <a href='{meta_url}' download>📄 Скачать JSON</a>
+                </div>
+            """
+
+    html = f"""
+        <html>
+        <head>
+            <title>Astro Gallery</title>
+        </head>
+        <body style='background:#000; color:#fff; font-family:sans-serif; text-align:center; padding:2em;'>
+            <h1>🌌 Astro Gallery</h1>
+            {items if items else "<p>Нет данных пока что.</p>"}
+        </body>
+        </html>
+    """
+    return html
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
