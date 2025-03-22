@@ -1,6 +1,10 @@
 import copy
 
 import numpy as np
+from matplotlib import pyplot as plt
+
+np.set_printoptions(threshold=1000000)
+
 class Solver:
     def imag_scale_one_input(self, a_b_c_beta: (float, float, float, float)):
         a = a_b_c_beta[0]
@@ -24,8 +28,10 @@ class Solver:
                 total_sizes.append(min(total_size1, total_size2))
         total_sizes = np.array(total_sizes)
         total_sizes.sort()
-        median_value = np.mean(total_sizes)
-        return median_value
+        #through everything not in 2-sigma
+        total_sizes = total_sizes[(total_sizes > np.mean(total_sizes) -  2 * np.std(total_sizes)) &
+                                (total_sizes < np.mean(total_sizes) + 2 * np.std(total_sizes))]
+        return np.mean(total_sizes)
 
 class Star:
     def __init__(self, x_measured_coord: float, y_measured_coord: float, RA: float, dec: float):
