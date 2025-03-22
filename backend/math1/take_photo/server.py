@@ -13,11 +13,18 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 # Сохраняем, что уже отправили
-SENT_LOG = set()
+import hashlib
+SENT_HASHES = set()
+
+def get_file_hash(path):
+    with open(path, "rb") as f:
+        return hashlib.sha1(f.read()).hexdigest()
 
 def send_to_telegram(image_path, json_path):
-    if image_path in SENT_LOG:
-        print("📵 Already sent:", image_path)
+    meta_hash = get_file_hash(json_path)
+
+    if meta_hash in SENT_HASHES:
+        print("📵 Already sent hash:", meta_hash)
         return
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
@@ -30,7 +37,8 @@ def send_to_telegram(image_path, json_path):
         r2 = requests.post(url2, data={"chat_id": TELEGRAM_CHAT_ID}, files={"document": meta})
         print("JSON :", r2.status_code, r2.text)
 
-    SENT_LOG.add(image_path)
+    SENT_HASHES.add(meta_hash)
+
 
 @app.route("/")
 def home():

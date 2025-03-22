@@ -115,7 +115,7 @@
         ctx.drawImage(video, 0, 0);
         video.srcObject.getTracks().forEach(track => track.stop());
 
-        imageBlob = await new Promise(res => canvas.toBlob(res, "image/jpeg"));
+        imageBlob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.95));
         const metadata = {
           timestamp: new Date().toISOString(),
           orientation: orientationData,
