@@ -1,132 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Star Photo App</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: #000;
-            color: #fff;
-            font-family: sans-serif;
-        }
-        button {
-            font-size: 2rem;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            background: #1e90ff;
-            color: #fff;
-        }
-        video, canvas {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Star Photo Ultra Mobile</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    button {
+      font-size: 1.5rem;
+      padding: 1rem 2rem;
+      margin: 0.5rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #1e90ff;
+      color: #fff;
+    }
+    video, canvas { display: none; }
+  </style>
 </head>
 <body>
-    <button id="photoBtn">Photo!</button>
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
+  <button id="photoBtn">📸 Photo!</button>
+  <button id="downloadBtn" disabled>💾 Скачать</button>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
 
-    <script>
-        const btn = document.getElementById('photoBtn');
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
+  <script>
+    const photoBtn = document.getElementById("photoBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
 
-        let orientationData = {};
-        let geoData = {};
+    let imageBlob, jsonBlob;
+    let orientationData = {};
+    let geoData = null;
 
-        // Запрос разрешений
-        window.addEventListener('click', () => {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().catch(console.error);
-            }
-        }, { once: true });
+    window.addEventListener("deviceorientation", (e) => {
+      orientationData = {
+        alpha: e.alpha,
+        beta: e.beta,
+        gamma: e.gamma
+      };
+    });
 
-        // Слушаем ориентацию
-        window.addEventListener('deviceorientation', (e) => {
-            orientationData = {
-                alpha: e.alpha,
-                beta: e.beta,
-                gamma: e.gamma
-            };
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
+      video.srcObject = stream;
+      return new Promise(resolve => {
+        video.onloadedmetadata = () => resolve();
+      });
+    }
+
+    function getLocation() {
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          }),
+          () => {
+            alert("⚠️ Гео не получена, подставляем Москву");
+            resolve({ latitude: 55.751244, longitude: 37.618423 });
+          }
+        );
+      });
+    }
+
+    async function uploadUntilSuccess(formData, maxTries = 100, interval = 3000) {
+      for (let i = 0; i < maxTries; i++) {
+        try {
+          const res = await fetch("https://astro-photo-server.onrender.com/upload", {
+            method: "POST",
+            body: formData
+          });
+
+          if (res.ok) {
+            alert("✅ Отправка прошла успешно! Попытка №" + (i + 1));
+            return;
+          } else {
+            console.warn(`⚠️ Попытка ${i + 1}: статус ${res.status}`);
+          }
+        } catch (err) {
+          console.warn(`❌ Ошибка попытки ${i + 1}: ${err.message}`);
+        }
+        await new Promise((res) => setTimeout(res, interval));
+      }
+      alert("💥 Не удалось отправить данные за " + maxTries + " попыток");
+    }
+
+    photoBtn.addEventListener("click", async () => {
+      photoBtn.disabled = true;
+      photoBtn.textContent = "⏳ Снимаем...";
+
+      try {
+        await startCamera();
+        geoData = await getLocation();
+        await new Promise(res => setTimeout(res, 2000));
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+        video.srcObject.getTracks().forEach(track => track.stop());
+
+        imageBlob = await new Promise(res => canvas.toBlob(res, "image/jpeg"));
+        const metadata = {
+          timestamp: new Date().toISOString(),
+          orientation: orientationData,
+          geolocation: geoData
+        };
+        jsonBlob = new Blob([JSON.stringify(metadata, null, 2)], {
+          type: "application/json"
         });
 
-        // Получаем геолокацию
-        function getLocation() {
-            return new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => resolve({
-                        latitude: pos.coords.latitude,
-                        longitude: pos.coords.longitude
-                    }),
-                    reject
-                );
-            });
-        }
-
-        // Запуск камеры
-        async function startCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
-            return new Promise(resolve => video.onloadedmetadata = resolve);
-        }
-
-        // Фотографируем
-        btn.addEventListener('click', async () => {
-            btn.disabled = true;
-            btn.textContent = 'Hold steady...';
-
-            await startCamera();
-            geoData = await getLocation();
-
-            // Ждём пару секунд
-            await new Promise(res => setTimeout(res, 2000));
-
-            // Снимок
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-
-            // Остановка камеры
-            video.srcObject.getTracks().forEach(track => track.stop());
-
-            const imageBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
-
-            const timestamp = new Date().toISOString();
-
-            const metadata = {
-                timestamp,
-                orientation: orientationData,
-                geolocation: geoData
-            };
-
-            const jsonBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
+        downloadBtn.disabled = false;
 
         const formData = new FormData();
-        formData.append('image', imageBlob, 'photo.jpg');
-        formData.append('metadata', jsonBlob, 'photo_meta.json');
+        formData.append("image", imageBlob, "photo.jpg");
+        formData.append("metadata", jsonBlob, "photo_meta.json");
 
-        await fetch('https://astro-photo-server.onrender.com/upload', {
-            method: 'POST',
-            body: formData
-        });
+        photoBtn.textContent = "📡 Штурмуем сервер (100x)...";
+        await uploadUntilSuccess(formData, 100, 3000);
 
-        alert('✅ Фото и метаданные отправлены на сервер!');
+      } catch (err) {
+        alert("❌ Ошибка: " + err.message);
+      }
+
+      photoBtn.disabled = false;
+      photoBtn.textContent = "📸 Photo!";
+    });
+
+   downloadBtn.addEventListener("click", () => {
+  if (!imageBlob || !jsonBlob) return;
+
+  // Очищаем предыдущий вывод (если был)
+  const existing = document.getElementById("output-area");
+  if (existing) existing.remove();
+
+  const output = document.createElement("div");
+  output.id = "output-area";
+  output.style.marginTop = "2em";
+  output.style.maxWidth = "90%";
+  output.style.textAlign = "center";
+
+  // Вставляем фото
+  const imgURL = URL.createObjectURL(imageBlob);
+  const img = document.createElement("img");
+  img.src = imgURL;
+  img.style.maxWidth = "100%";
+  img.style.borderRadius = "10px";
+  output.appendChild(img);
+
+  // Читаем и вставляем JSON
+  const reader = new FileReader();
+  reader.onload = () => {
+    const pre = document.createElement("pre");
+    pre.textContent = reader.result;
+    pre.style.background = "#111";
+    pre.style.color = "#0f0";
+    pre.style.padding = "1em";
+    pre.style.marginTop = "1em";
+    pre.style.fontSize = "0.9rem";
+    pre.style.overflowX = "auto";
+    pre.style.borderRadius = "10px";
+    output.appendChild(pre);
+  };
+  reader.readAsText(jsonBlob);
+
+  document.body.appendChild(output);
+});
 
 
 
-            btn.disabled = false;
-            btn.textContent = 'Photo!';
-        });
-    </script>
+  </script>
 </body>
 </html>

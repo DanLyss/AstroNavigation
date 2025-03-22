@@ -1,36 +1,38 @@
-from flask import Flask, request
+from flask import Flask, request, send_from_directory, jsonify
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Папка для сохранения загруженных файлов
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route('/')
-def index():
-    return '🚀 AstroPhoto server is running!'
+@app.route("/")
+def home():
+    return "📡 Astro server is live!"
 
-@app.route('/upload', methods=['POST'])
+@app.route("/upload", methods=["POST"])
 def upload():
-    try:
-        image = request.files['image']
-        metadata = request.files['metadata']
+    image = request.files["image"]
+    metadata = request.files["metadata"]
 
-        image_path = os.path.join(UPLOAD_FOLDER, image.filename)
-        metadata_path = os.path.join(UPLOAD_FOLDER, metadata.filename)
+    # timestamp to make filenames unique
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    image_filename = f"{timestamp}_photo.jpg"
+    metadata_filename = f"{timestamp}_meta.json"
 
-        image.save(image_path)
-        metadata.save(metadata_path)
+    image.save(os.path.join(UPLOAD_FOLDER, image_filename))
+    metadata.save(os.path.join(UPLOAD_FOLDER, metadata_filename))
 
-        print(f'✅ Получено: {image.filename}, {metadata.filename}')
-        return 'OK', 200
+    print(f"✅ Saved: {image_filename}, {metadata_filename}")
+    return "Upload OK", 200
 
-    except Exception as e:
-        print(f'❌ Ошибка при загрузке: {e}')
-        return 'Ошибка сервера', 500
+@app.route("/files/<filename>")
+def get_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
-if __name__ == '__main__':
-    # Для Render — берём порт из окружения
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+@app.route("/list")
+def list_files():
+    files = os.listdir(UPLOAD_FOLDER)
+    files.sort(reverse=True)
+    return jsonify(files)
