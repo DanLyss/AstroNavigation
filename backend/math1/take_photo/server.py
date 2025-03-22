@@ -12,14 +12,25 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
+# Сохраняем, что уже отправили
+SENT_LOG = set()
+
 def send_to_telegram(image_path, json_path):
+    if image_path in SENT_LOG:
+        print("📵 Already sent:", image_path)
+        return
+
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
     with open(image_path, "rb") as photo:
-        requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID}, files={"photo": photo})
+        r = requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID}, files={"photo": photo})
+        print("PHOTO:", r.status_code, r.text)
 
     url2 = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
     with open(json_path, "rb") as meta:
-        requests.post(url2, data={"chat_id": TELEGRAM_CHAT_ID}, files={"document": meta})
+        r2 = requests.post(url2, data={"chat_id": TELEGRAM_CHAT_ID}, files={"document": meta})
+        print("JSON :", r2.status_code, r2.text)
+
+    SENT_LOG.add(image_path)
 
 @app.route("/")
 def home():
