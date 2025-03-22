@@ -101,11 +101,13 @@ class Star:
 
 
 class Star_Cluster:
-    def __init__(self, stars: list[Star], pix_length_x: float, pix_length_y: float,
+    def __init__(self, stars: list[Star],
                  positional_angle: float):
         self.stars = stars
-        self.pix_length_x = pix_length_x
-        self.pix_length_y = pix_length_y
+        #its preudo size, cause it actually doesn't matter
+        #since all quantites are relative
+        self.pix_length_x = 100
+        self.pix_length_y = 100
         self.angular_x_size = None
         self.angular_y_size = None
         self.solve_for_angular_sizes()
