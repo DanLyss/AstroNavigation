@@ -13,10 +13,12 @@ def home():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    image = request.files["image"]
-    metadata = request.files["metadata"]
+    image = request.files.get("image")
+    metadata = request.files.get("metadata")
 
-    # timestamp to make filenames unique
+    if not image or not metadata:
+        return "❌ Missing files", 400
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     image_filename = f"{timestamp}_photo.jpg"
     metadata_filename = f"{timestamp}_meta.json"
@@ -33,6 +35,9 @@ def get_file(filename):
 
 @app.route("/list")
 def list_files():
-    files = os.listdir(UPLOAD_FOLDER)
-    files.sort(reverse=True)
+    files = sorted(os.listdir(UPLOAD_FOLDER), reverse=True)
     return jsonify(files)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
