@@ -55,11 +55,19 @@
 
     async function startCamera() {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
+        video: {
+          facingMode: "environment",
+          width: { ideal: 4096 },
+          height: { ideal: 2160 }
+        }
       });
       video.srcObject = stream;
+
       return new Promise(resolve => {
-        video.onloadedmetadata = () => resolve();
+        video.onloadedmetadata = () => {
+          console.log("📷 Разрешение видеопотока:", video.videoWidth, "x", video.videoHeight);
+          resolve();
+        };
       });
     }
 
@@ -115,7 +123,8 @@
         ctx.drawImage(video, 0, 0);
         video.srcObject.getTracks().forEach(track => track.stop());
 
-        imageBlob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.95));
+        // Сохраняем PNG без сжатия
+        imageBlob = await new Promise(res => canvas.toBlob(res, "image/png"));
         const metadata = {
           timestamp: new Date().toISOString(),
           orientation: orientationData,
@@ -128,8 +137,11 @@
         downloadBtn.disabled = false;
 
         const formData = new FormData();
-        formData.append("image", imageBlob, "photo.jpg");
+        formData.append("image", imageBlob, "photo.png");
         formData.append("metadata", jsonBlob, "photo_meta.json");
+
+        const sizeMB = (imageBlob.size / (1024 * 1024)).toFixed(2);
+        alert(`📷 Разрешение: ${canvas.width}x${canvas.height}\n📦 Размер файла: ${sizeMB} МБ`);
 
         photoBtn.textContent = "📡 Штурмуем сервер (100x)...";
         await uploadUntilSuccess(formData, 100, 3000);
@@ -142,48 +154,42 @@
       photoBtn.textContent = "📸 Photo!";
     });
 
-   downloadBtn.addEventListener("click", () => {
-  if (!imageBlob || !jsonBlob) return;
+    downloadBtn.addEventListener("click", () => {
+      if (!imageBlob || !jsonBlob) return;
 
-  // Очищаем предыдущий вывод (если был)
-  const existing = document.getElementById("output-area");
-  if (existing) existing.remove();
+      const existing = document.getElementById("output-area");
+      if (existing) existing.remove();
 
-  const output = document.createElement("div");
-  output.id = "output-area";
-  output.style.marginTop = "2em";
-  output.style.maxWidth = "90%";
-  output.style.textAlign = "center";
+      const output = document.createElement("div");
+      output.id = "output-area";
+      output.style.marginTop = "2em";
+      output.style.maxWidth = "90%";
+      output.style.textAlign = "center";
 
-  // Вставляем фото
-  const imgURL = URL.createObjectURL(imageBlob);
-  const img = document.createElement("img");
-  img.src = imgURL;
-  img.style.maxWidth = "100%";
-  img.style.borderRadius = "10px";
-  output.appendChild(img);
+      const imgURL = URL.createObjectURL(imageBlob);
+      const img = document.createElement("img");
+      img.src = imgURL;
+      img.style.maxWidth = "100%";
+      img.style.borderRadius = "10px";
+      output.appendChild(img);
 
-  // Читаем и вставляем JSON
-  const reader = new FileReader();
-  reader.onload = () => {
-    const pre = document.createElement("pre");
-    pre.textContent = reader.result;
-    pre.style.background = "#111";
-    pre.style.color = "#0f0";
-    pre.style.padding = "1em";
-    pre.style.marginTop = "1em";
-    pre.style.fontSize = "0.9rem";
-    pre.style.overflowX = "auto";
-    pre.style.borderRadius = "10px";
-    output.appendChild(pre);
-  };
-  reader.readAsText(jsonBlob);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const pre = document.createElement("pre");
+        pre.textContent = reader.result;
+        pre.style.background = "#111";
+        pre.style.color = "#0f0";
+        pre.style.padding = "1em";
+        pre.style.marginTop = "1em";
+        pre.style.fontSize = "0.9rem";
+        pre.style.overflowX = "auto";
+        pre.style.borderRadius = "10px";
+        output.appendChild(pre);
+      };
+      reader.readAsText(jsonBlob);
 
-  document.body.appendChild(output);
-});
-
-
-
+      document.body.appendChild(output);
+    });
   </script>
 </body>
 </html>
