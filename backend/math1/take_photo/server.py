@@ -27,10 +27,10 @@ def send_to_telegram(image_path, json_path):
         print("📵 Already sent hash:", meta_hash)
         return
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
     with open(image_path, "rb") as photo:
-        r = requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID}, files={"photo": photo})
-        print("PHOTO:", r.status_code, r.text)
+        r = requests.post(url, data={"chat_id": TELEGRAM_CHAT_ID}, files={"document": photo})
+        print("PNG (doc):", r.status_code, r.text)
 
     url2 = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
     with open(json_path, "rb") as meta:
