@@ -61,8 +61,8 @@ def time_eq(days, year):
     return (-7.659 * np.sin(d) + 9.863 * np.sin(2 * d + 3.5932)) / 60
 
 
-def true_local_time(star, N, year, phi, A1):
-    az = (star.Az + A1) % (2 * np.pi)
+def true_local_time(star, N, year, phi):
+    az = (star.Az) % (2 * np.pi)
     cos_H = (np.sin(star.Alt) - np.sin(phi) * np.sin(star.dec)) / (np.cos(phi) * np.cos(star.dec))
     if np.abs(cos_H) > 1:
         return None
@@ -81,6 +81,7 @@ def true_local_time(star, N, year, phi, A1):
                                     9.8 * math.sin(math.radians(1.973 * (N - 81)))) * 4 / 60) % 360))
         )
     )
+    print(ra_sun, "rasun", time_eq(N, year))
     local_time = (12 + (t + star.RA - ra_sun) / 2 / np.pi * 24) % 24
     print(local_time)
     return local_time - time_eq(N, year)
@@ -90,8 +91,13 @@ def to_hours(dt):
     return dt.hour + (dt.minute / 60) + (dt.second / 3600) + (dt.microsecond / 3_600_000_000)
 
 
-def longitude(phi, A1, star, days, GMT, year):
-    time = true_local_time(star, days, year, phi, A1)
+def day_of_year_fraction(dt):
+    start_of_year = datetime(dt.year, 1, 1, tzinfo=dt.tzinfo)
+    seconds_since_start = (dt - start_of_year).total_seconds()
+    return seconds_since_start / 86400
+
+def longitude(phi, star, days, GMT, year):
+    time = true_local_time(star, days, year, phi)
     if time is not None:
         return np.deg2rad(norm((time - GMT) * 15, -180, 180))
     else:
@@ -100,14 +106,14 @@ def longitude(phi, A1, star, days, GMT, year):
 #Main function for longitude calculations (cur_time in ISO format)
 from datetime import datetime, timezone
 
-def mean_longitude(phi, A1, cluster, cur_time):
-    dt = datetime.fromisoformat(cur_time).astimezone(timezone.utc)
-    day = dt.timetuple().tm_yday
+def mean_longitude(cluster, dt):
+    phi = np.array(mean_lattitude(cluster)[:-1])[1]
+    day = day_of_year_fraction(dt)
     year = dt.year
     hour = to_hours(dt)
-
+    print(year, day, hour)
     return np.nanmean([
-        longitude(phi, A1, star, day, hour, year)
+        longitude(phi, star, day, hour, year)
         for star in cluster.stars
     ], axis=0)
 

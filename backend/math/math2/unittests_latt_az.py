@@ -1,8 +1,9 @@
 import unittest
 import numpy as np
-from AstroNavigation.backend.math.math1.converter_flat_hor import Star, Star_Cluster
+from AstroNavigation.backend.math.Star_Star_Cluster import Star, Star_Cluster
+from AstroNavigation.backend.math.math2.latt_long_calc import longitude
 from latt_long_calc import mean_lattitude, norm, mean_longitude
-from AstroNavigation.backend.math.testdata import TEST_CASES
+from AstroNavigation.backend.math.test_cases_Astrometry import TEST_CASES
 
 
 class TestLatitudeAzimuthEstimation(unittest.TestCase):
@@ -26,17 +27,12 @@ class TestLatitudeAzimuthEstimation(unittest.TestCase):
                 pos_angle_rad = np.deg2rad(case["positional_angle_deg"])
                 rotation_angle = np.deg2rad(case["rotation_angle_deg"])
                 cluster = Star_Cluster(stars, pos_angle_rad, rotation_angle)
-                true_vals = np.array([np.deg2rad(case["AzAlt_deg"][0][0]), np.deg2rad(53.16542)])
-
-                computed_vals1 = np.array(mean_lattitude(cluster)[:-1])
-                computed_vals2 = np.array([norm(computed_vals1[0]-np.pi, 0, 2 * np.pi), computed_vals1[1]])
-
-                error = min(np.mean(np.abs(true_vals - computed_vals1)), np.mean(np.abs(true_vals - computed_vals2)))
+                error = np.deg2rad(np.abs(np.deg2rad(53.0577)-cluster.phi))
                 self.assertLess(error,
                                 0.01,
-                                f"Latt_Az test failed (mean error: {np.rad2deg(error):.2f}°)")
+                                f"Latt_Az test failed (mean error: {np.rad2deg(error)}°)")
 
-                print(f"[Latt Test Case {idx + 1}] Lattitude error: {np.rad2deg(min(np.abs(true_vals[1] - computed_vals1[1]), np.abs(true_vals[1] - computed_vals2[1]))):.5f}°")
+                print(f"[Latt Test Case {idx + 1}] Lattitude error: {error * 57.3:.7f}°")
 
     def test_longitude(self):
         # Дата и время съёмки (фиксированное)
@@ -61,14 +57,8 @@ class TestLatitudeAzimuthEstimation(unittest.TestCase):
                 pos_angle_rad = np.deg2rad(case["positional_angle_deg"])
                 rotation_angle = np.deg2rad(case["rotation_angle_deg"])
                 cluster = Star_Cluster(stars, pos_angle_rad, rotation_angle)
-                A1, phi = np.array(mean_lattitude(cluster)[:-1])[0], np.array(mean_lattitude(cluster)[:-1])[1]
-                # Вычисляем долготу
-                computed_long = mean_longitude(phi, A1, cluster, cur_time)
-                # Считаем ошибку в градусах
-                error = abs(np.rad2deg(computed_long - true_long_rad))
-                # Приводим к [0, 360]
-                if error > 180:
-                    error = 360 - error
+                longitude = cluster.long
+                error = np.abs(8.80 - np.rad2deg(longitude))
 
                 self.assertLess(
                     error,

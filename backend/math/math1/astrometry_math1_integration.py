@@ -2,7 +2,7 @@ import os
 import subprocess
 import time
 from astropy.io import fits
-from converter_flat_hor import Star, Star_Cluster
+from AstroNavigation.backend.math.Star_Star_Cluster import Star, Star_Cluster
 import numpy as np
 
 

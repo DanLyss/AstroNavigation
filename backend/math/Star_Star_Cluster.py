@@ -1,7 +1,8 @@
 import copy
+from datetime import datetime, timezone
 
 import numpy as np
-from matplotlib import pyplot as plt
+from AstroNavigation.backend.math.math2.latt_long_calc import mean_lattitude, mean_longitude
 
 np.set_printoptions(threshold=1000000)
 
@@ -115,7 +116,7 @@ class Star:
 
 class Star_Cluster:
     def __init__(self, stars: list[Star],
-                 positional_angle: float, rotation_angle: float):
+                 positional_angle: float, rotation_angle: float, timeGMT: str = "2001-09-11T22:00:00+02:00"):
         self.stars = stars
         self.rotation_angle = rotation_angle
         self.set_normal_x_y_for_all_stars()
@@ -130,6 +131,12 @@ class Star_Cluster:
         # print("SIZEY", self.angular_y_size)
         self.positional_angle = positional_angle
         self.set_forall_stars_Alt_Az()
+        self.Az_star_0 = mean_lattitude(self)[0]
+        self.phi = mean_lattitude(self)[1]
+        self.make_Az_abs()
+        self.timeGMT = datetime.fromisoformat(timeGMT).astimezone(timezone.utc)
+        self.long = mean_longitude(self, self.timeGMT)
+
 
     def solve_for_angular_sizes(self):
         a_b_c_beta_for_x = []
@@ -146,10 +153,16 @@ class Star_Cluster:
         solver = Solver()
         self.angular_x_size = solver.imag_solve_total(a_b_c_beta_for_x)
         self.angular_y_size = solver.imag_solve_total(a_b_c_beta_for_y)
+
     def set_forall_stars_Alt_Az(self):
         for star in self.stars:
             star.set_Alt_Az(self.angular_x_size, self.angular_y_size,
                             self.pix_length_x / 2, self.pix_length_y / 2, self.positional_angle)
+
+    def make_Az_abs(self):
+        for star in self.stars:
+            star.Az = (star.Az + self.Az_star_0) % (2 * np.pi)
+
     def set_normal_x_y_for_all_stars(self):
         for star in self.stars:
             star.set_normal_x_y(self.rotation_angle)

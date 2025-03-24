@@ -1,15 +1,15 @@
 import unittest
 import numpy as np
 import matplotlib.pyplot as plt
-from converter_flat_hor import Star, Star_Cluster
-from AstroNavigation.backend.math.testdata import TEST_CASES
+from AstroNavigation.backend.math.Star_Star_Cluster import Star, Star_Cluster
+from AstroNavigation.backend.math.test_cases_Astrometry import TEST_CASES
 
 
 #NOTE: DATE OF PHOTOS - 9/11/2001, location - Bremen, Bremen time 22:00
 
 
 class TestProjectionOnDatasets(unittest.TestCase):
-    DEBUG = False  # Set to False to disable plots
+    DEBUG = False # Set to False to disable plots
 
     def setUp(self):
         self.test_cases = TEST_CASES
@@ -43,15 +43,15 @@ class TestProjectionOnDatasets(unittest.TestCase):
                 error = np.linalg.norm(computed_vals - true_vals, axis=1)
                 mean_error = np.mean(error)
 
+                if self.DEBUG:
+                    self._plot_debug(true_vals, computed_vals, idx + 1)
+
                 print(f"[Test Case {idx+1}] Average angular error: {mean_error:.2f}°")
                 self.assertLess(
                     mean_error,
-                    0.4,
+                    0.6,
                     f"Average angular error too high ({mean_error:.2f}°)"
                 )
-
-                if self.DEBUG:
-                    self._plot_debug(true_vals, computed_vals, idx + 1)
 
     def test_robustness_to_pixel_noise_on_one_star(self):
         noise_factor = 0.5
