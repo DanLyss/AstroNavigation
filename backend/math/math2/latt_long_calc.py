@@ -6,9 +6,6 @@ from datetime import datetime, timezone
 
 ### Actual constants
 iters = 5
-obliquity = np.deg2rad(23 + 27 / 60 + 21.406 / 3600 - 46.837 / 3600 / 4)
-year_length = 365.2422
-day_eq = 79
 
 
 
@@ -96,9 +93,7 @@ def true_local_time(star, N, year, phi):
     if az > np.pi:
         t = np.pi * 2 - t
     ra_sun = sun_RA(N, year)[0]
-    print(ra_sun, "rasun", time_eq(N, year))
     local_time = (12 + (t + star.RA - ra_sun) / 2 / np.pi * 24) % 24
-    print(local_time)
     return local_time - time_eq(N, year)
 
 
@@ -126,7 +121,6 @@ def mean_longitude(cluster, dt):
     day = day_of_year_fraction(dt)
     year = dt.year
     hour = to_hours(dt)
-    print(year, day, hour)
     return np.nanmean([
         longitude(phi, star, day, hour, year)
         for star in cluster.stars

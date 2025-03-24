@@ -24,7 +24,10 @@ TEST_CASES =  [
                     (175 + 47/60 + 33/3600, 23 + 58/60 + 33/3600)
                 ],
                 "positional_angle_deg": 30 + 29 / 60 + 59 / 3600,
-                "rotation_angle_deg" : 0
+                "rotation_angle_deg" : 0,
+                "datetime": "2001-09-11T22:00:00+02:00",
+                "longitude": 8.80360,
+                "latitude": 53.05770
             },
             {
                "pixel_coords" : [(0, 0), (370, -44), (474, -64), (159, 372), (-432, 34), (-688, 12), (-575, -122), (-623, -351),
@@ -49,7 +52,10 @@ TEST_CASES =  [
                     (292 + 18 / 60 + 56 / 3600, 52 + 2 / 60 + 2 / 3600)
                 ],
                 "positional_angle_deg": 47 + 59 / 60 + 26 / 3600,
-                "rotation_angle_deg" : 0
+                "rotation_angle_deg" : 0,
+                "datetime": "2001-09-11T22:00:00+02:00",
+                "longitude": 8.80360,
+                "latitude": 53.05770
             },
             {
                 "pixel_coords": [(0, 0), (80, 124), (527, -298), (-634, 269), (-344, 259),
@@ -74,7 +80,10 @@ TEST_CASES =  [
                     (238 + 29 / 60 + 52 / 3600, 39 + 29 / 60 + 9 / 3600)
                 ],
                 "positional_angle_deg": 50 + 52 / 60 + 27 / 3600,
-                "rotation_angle_deg" : 0
+                "rotation_angle_deg" : 0,
+                "datetime": "2001-09-11T22:00:00+02:00",
+                "longitude": 8.80360,
+                "latitude": 53.05770
             },
             {
                 "pixel_coords": [(0, 0), (-336, -30), (-540, 80), (-532, 177),
@@ -100,7 +109,10 @@ TEST_CASES =  [
                     (49 + 29 / 60 + 13.7 / 3600, 7 + 24 / 60 + 6 / 3600)
                 ],
                 "positional_angle_deg": 13 + 21 / 60 + 49 / 3600,
-                "rotation_angle_deg" : 0
+                "rotation_angle_deg" : 0,
+                "datetime": "2001-09-11T22:00:00+02:00",
+                "longitude": 8.80360,
+                "latitude": 53.05770
             },
             {
                 "pixel_coords": [(0, 0), (-320, -104), (-545, -45), (-558, 50), (267, -104), (-5, -216)],
@@ -117,7 +129,10 @@ TEST_CASES =  [
                     (49 + 29 / 60 + 13.7 / 3600, 7 + 24 / 60 + 6 / 3600)
                 ],
                 "positional_angle_deg": 13 + 21 / 60 + 49 / 3600,
-                "rotation_angle_deg": 13.2
+                "rotation_angle_deg": 13.2,
+                "datetime": "2001-09-11T22:00:00+02:00",
+                "longitude": 8.80360,
+                "latitude": 53.05770
             },
             {
                 "pixel_coords": [(0, 0), (20, 144), (-423, 89), (-389, 151), (-191, -211), (9, -84), (277, -157)],
@@ -136,6 +151,9 @@ TEST_CASES =  [
                     (238 + 29 / 60 + 52 / 3600, 39 + 29 / 60 + 9 / 3600)
                 ],
                 "positional_angle_deg": 50 + 52 / 60 + 27 / 3600,
-                "rotation_angle_deg": 24.7
+                "rotation_angle_deg": 24.7,
+                "datetime": "2001-09-11T22:00:00+02:00",
+                "longitude": 8.80360,
+                "latitude": 53.05770
             }
         ]
