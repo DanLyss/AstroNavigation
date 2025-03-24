@@ -60,6 +60,31 @@ def time_eq(days, year):
     d = 6.24 + 0.0172 * (365.35 * (year - 2000) + days)
     return (-7.659 * np.sin(d) + 9.863 * np.sin(2 * d + 3.5932)) / 60
 
+def sun_RA(day_of_year, year):
+    def julian_day(y, n):
+        a = int((14 - 1) / 12)
+        y_ = y + 4800 - a
+        m = 1 + 12 * a - 3
+        JDN = n + int((153 * m + 2) / 5) + 365 * y_ + int(y_ / 4) - int(y_ / 100) + int(y_ / 400) - 32045
+        return JDN
+
+    jd = julian_day(year, day_of_year)
+    T = (jd - 2451545.0) / 36525
+    L0 = (280.46646 + 36000.76983 * T + 0.0003032 * T**2) % 360
+    M = (357.52911 + 35999.05029 * T - 0.0001537 * T**2) % 360
+    e = 0.016708634 - 0.000042037 * T - 0.0000001267 * T**2
+    C = (1.914602 - 0.004817 * T - 0.000014 * T**2) * np.sin(np.radians(M)) \
+        + (0.019993 - 0.000101 * T) * np.sin(np.radians(2 * M)) \
+        + 0.000289 * np.sin(np.radians(3 * M))
+    true_long = L0 + C
+
+    epsilon = 23 + 26/60 + 21.448/3600 - (46.8150 * T + 0.00059 * T**2 - 0.001813 * T**3) / 3600
+    alpha_rad = np.arctan2(np.cos(np.radians(epsilon)) * np.sin(np.radians(true_long)),
+                           np.cos(np.radians(true_long)))
+    if alpha_rad < 0:
+        alpha_rad += 2 * np.pi
+
+    return alpha_rad, np.degrees(alpha_rad), np.degrees(alpha_rad)/15  # В радианах, градусах и часах)
 
 def true_local_time(star, N, year, phi):
     az = (star.Az) % (2 * np.pi)
@@ -70,17 +95,7 @@ def true_local_time(star, N, year, phi):
     t = np.arccos(cos_H)
     if az > np.pi:
         t = np.pi * 2 - t
-    ra_sun = (lambda l: l + 2 * math.pi if l < 0 else l)(
-        math.atan2(
-            math.cos(math.radians(23.44)) *
-            math.sin(math.radians(((360 * (N - 81) / 365.2422) +
-                                   (7.6 * math.sin(math.radians(0.986 * (N - 4))) -
-                                    9.8 * math.sin(math.radians(1.973 * (N - 81)))) * 4 / 60) % 360)),
-            math.cos(math.radians(((360 * (N - 81) / 365.2422) +
-                                   (7.6 * math.sin(math.radians(0.986 * (N - 4))) -
-                                    9.8 * math.sin(math.radians(1.973 * (N - 81)))) * 4 / 60) % 360))
-        )
-    )
+    ra_sun = sun_RA(N, year)[0]
     print(ra_sun, "rasun", time_eq(N, year))
     local_time = (12 + (t + star.RA - ra_sun) / 2 / np.pi * 24) % 24
     print(local_time)

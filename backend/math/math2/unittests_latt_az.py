@@ -62,7 +62,7 @@ class TestLatitudeAzimuthEstimation(unittest.TestCase):
 
                 self.assertLess(
                     error,
-                2,  # допускаемая погрешность в градусах
+                1,
                     f"Longitude estimation error too high ({error:.2f}°)"
                 )
 
