@@ -126,8 +126,8 @@ class Star_Cluster:
         self.angular_x_size = None
         self.angular_y_size = None
         self.solve_for_angular_sizes()
-        print("SIZEX", self.angular_x_size)
-        print("SIZEY", self.angular_y_size)
+        # print("SIZEX", self.angular_x_size)
+        # print("SIZEY", self.angular_y_size)
         self.positional_angle = positional_angle
         self.set_forall_stars_Alt_Az()
 
