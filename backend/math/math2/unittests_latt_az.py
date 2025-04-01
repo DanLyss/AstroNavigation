@@ -37,7 +37,7 @@ class TestLatitudeEstimation(unittest.TestCase):
                                 f"Latt_Az test failed (mean error: {np.rad2deg(error)}°)")
 
                 print(f"[Latt Test Case {idx + 1}] Lattitude error: {error * 180 / np.pi:.7f}°")
-               error_Az = np.deg2rad(np.abs(norm(case["AzAlt_deg"][0][0], 0, 360)-norm(np.rad2deg(cluster.stars[0].Az), 0, 360)))
+                error_Az = np.deg2rad(np.abs(norm(case["AzAlt_deg"][0][0], 0, 360)-norm(np.rad2deg(cluster.stars[0].Az), 0, 360)))
                 self.assertLess(
                     error_Az,
                     1,
