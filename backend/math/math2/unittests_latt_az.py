@@ -16,11 +16,15 @@ class TestLatitudeEstimation(unittest.TestCase):
                 stars = []
                 for i in range(len(case["pixel_coords"])):
                     x, y = case["pixel_coords"][i]
-                    ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
-                    dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
+                    if type(case["RA_Dec"][i][0]) == float:
+                        ra_deg = case["RA_Dec"][i][0]
+                        dec_deg = case["RA_Dec"][i][1]
+                    else:
+                        ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
+                        dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
 
-                    ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
-                    dec_deg = dec_d + dec_m / 60 + dec_s / 3600
+                        ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
+                        dec_deg = dec_d + dec_m / 60 + dec_s / 3600
 
                     stars.append(Star(x, y, np.deg2rad(ra_deg), np.deg2rad(dec_deg)))
 
@@ -33,7 +37,7 @@ class TestLatitudeEstimation(unittest.TestCase):
                                 f"Latt_Az test failed (mean error: {np.rad2deg(error)}°)")
 
                 print(f"[Latt Test Case {idx + 1}] Lattitude error: {error * 180 / np.pi:.7f}°")
-                error_Az = np.deg2rad(np.abs((case["AzAlt_deg"][0][0])-np.rad2deg(cluster.stars[0].Az)))
+               error_Az = np.deg2rad(np.abs(norm(case["AzAlt_deg"][0][0], 0, 360)-norm(np.rad2deg(cluster.stars[0].Az), 0, 360)))
                 self.assertLess(
                     error_Az,
                     1,
@@ -49,11 +53,15 @@ class TestLatitudeEstimation(unittest.TestCase):
                 stars = []
                 for i in range(len(case["pixel_coords"])):
                     x, y = case["pixel_coords"][i]
-                    ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
-                    dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
+                    if type(case["RA_Dec"][i][0]) == float:
+                        ra_deg = case["RA_Dec"][i][0]
+                        dec_deg = case["RA_Dec"][i][1]
+                    else:
+                        ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
+                        dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
 
-                    ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
-                    dec_deg = dec_d + dec_m / 60 + dec_s / 3600
+                        ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
+                        dec_deg = dec_d + dec_m / 60 + dec_s / 3600
 
                     stars.append(Star(x, y, np.deg2rad(ra_deg), np.deg2rad(dec_deg)))
 
