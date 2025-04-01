@@ -20,11 +20,15 @@ class TestProjectionOnDatasets(unittest.TestCase):
                 stars = []
                 for i in range(len(case["pixel_coords"])):
                     x, y = case["pixel_coords"][i]
-                    ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
-                    dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
+                    if type(case["RA_Dec"][i][0]) == float:
+                        ra_deg = case["RA_Dec"][i][0]
+                        dec_deg = case["RA_Dec"][i][1]
+                    else:
+                        ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
+                        dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
 
-                    ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
-                    dec_deg = dec_d + dec_m / 60 + dec_s / 3600
+                        ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
+                        dec_deg = dec_d + dec_m / 60 + dec_s / 3600
 
                     stars.append(Star(x, y, np.deg2rad(ra_deg), np.deg2rad(dec_deg)))
 
@@ -70,11 +74,16 @@ class TestProjectionOnDatasets(unittest.TestCase):
                             x *= 1 + noise_factor * np.random.choice([-1, 1])
                             y *= 1 + noise_factor * np.random.choice([-1, 1])
 
-                        ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
-                        dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
-                        ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
-                        dec_deg = dec_d + dec_m / 60 + dec_s / 3600
+                        if type(case["RA_Dec"][i][0]) == float:
+                            ra_deg = case["RA_Dec"][i][0]
+                            dec_deg = case["RA_Dec"][i][1]
+                        else:
+                            ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
+                            dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
 
+                            ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
+                            dec_deg = dec_d + dec_m / 60 + dec_s / 3600
+                            
                         stars.append(Star(x, y, np.deg2rad(ra_deg), np.deg2rad(dec_deg)))
 
                     pos_angle_rad = np.deg2rad(case["positional_angle_deg"])
@@ -117,10 +126,15 @@ class TestProjectionOnDatasets(unittest.TestCase):
                     x *= 1 + noise_factor * np.random.uniform(-1, 1)
                     y *= 1 + noise_factor * np.random.uniform(-1, 1)
 
-                    ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
-                    dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
-                    ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
-                    dec_deg = dec_d + dec_m / 60 + dec_s / 3600
+                    if type(case["RA_Dec"][i][0]) == float:
+                        ra_deg = case["RA_Dec"][i][0]
+                        dec_deg = case["RA_Dec"][i][1]
+                    else:
+                        ra_h, ra_m, ra_s = case["RA_Dec"][i][0]
+                        dec_d, dec_m, dec_s = case["RA_Dec"][i][1]
+
+                        ra_deg = (ra_h * 3600 + ra_m * 60 + ra_s) / 86400 * 360
+                        dec_deg = dec_d + dec_m / 60 + dec_s / 3600
 
                     stars.append(Star(x, y, np.deg2rad(ra_deg), np.deg2rad(dec_deg)))
 
