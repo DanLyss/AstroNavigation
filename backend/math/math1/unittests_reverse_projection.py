@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 from AstroNavigation.backend.math.Star_Star_Cluster import Star, Star_Cluster
-from AstroNavigation.backend.math.test_cases_Astrometry import TEST_CASES
+from AstroNavigation.backend.math.test_cases_Stellarium import TEST_CASES
 
 
 #NOTE: DATE OF PHOTOS - 9/11/2001, location - Bremen, Bremen time 22:00
