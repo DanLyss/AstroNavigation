@@ -2,49 +2,50 @@ package com.example.cameralong
 
 import android.util.Log
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.IOException
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 
 object TelegramSender {
-
-    private const val TAG = "TelegramSender"
-
-    private const val BOT_TOKEN = "#####################"
-    private const val CHAT_ID = "##################"
-
+    private const val botToken = "7780735429:AAGM-z5st0BNIlftDWneOPhSsb15SDhcJIs"
+    private const val chatId = "-1002506438840"
     private val client = OkHttpClient()
 
-    fun sendFiles(photo: File, json: File) {
-        sendDocument(photo, "📸 Фотка")
-        sendDocument(json, "📝 Метаданные")
-    }
+    fun sendPhoto(photo: File, location: String, angles: String) {
+        if (!photo.exists() || photo.length() == 0L) {
+            Log.e("TelegramSender", "❌ File missing or empty: ${photo.absolutePath}")
+            return
+        }
 
-    private fun sendDocument(file: File, caption: String) {
+        val caption = "📍 Location: $location\n🎯 Angles: $angles"
+
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("chat_id", CHAT_ID)
+            .addFormDataPart("chat_id", chatId)
             .addFormDataPart("caption", caption)
-            .addFormDataPart("document", file.name, file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
+            .addFormDataPart(
+                "document", photo.name,
+                photo.asRequestBody("application/octet-stream".toMediaTypeOrNull())
+            )
             .build()
 
         val request = Request.Builder()
-            .url("https://api.telegram.org/bot$BOT_TOKEN/sendDocument")
+            .url("https://api.telegram.org/bot$botToken/sendDocument")
             .post(requestBody)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "Ошибка отправки ${file.name}: ${e.message}", e)
+                Log.e("TelegramSender", "❌ Failed to send document: ${e.message}")
             }
 
             override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string()
                 if (!response.isSuccessful) {
-                    Log.e(TAG, "Telegram API ошибка для ${file.name}: ${response.code} - ${response.message}")
-                    Log.e(TAG, "Ответ: ${response.body?.string()}")
+                    Log.e("TelegramSender", "❌ Telegram error ${response.code}: $body")
                 } else {
-                    Log.d(TAG, "✅ Успешно отправлено: ${file.name}")
+                    Log.d("TelegramSender", "✅ Document sent: $body")
                 }
             }
         })

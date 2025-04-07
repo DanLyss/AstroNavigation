@@ -42,6 +42,13 @@ android {
 }
 
 dependencies {
+
+    // OkHttp core
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+// Kotlin extensions for OkHttp
+    implementation("com.squareup.okhttp3:okhttp-urlconnection:4.12.0")
+
     // CameraX Core & Extensions
     implementation("androidx.camera:camera-core:1.3.1")
     implementation("androidx.camera:camera-camera2:1.3.1")
