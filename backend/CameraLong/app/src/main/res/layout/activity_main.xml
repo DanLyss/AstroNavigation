@@ -16,13 +16,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- ✅ FIXED: removed stepSize to avoid IllegalStateException -->
     <com.google.android.material.slider.Slider
         android:id="@+id/exposureSlider"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:valueFrom="100000"
         android:valueTo="3000000000"
-        android:stepSize="100000"
         android:value="1000000000"
         app:layout_constraintBottom_toTopOf="@id/captureButton"
         app:layout_constraintStart_toStartOf="parent"
@@ -33,7 +33,7 @@
         android:id="@+id/captureButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Capture"
+        android:text="CAPTURE"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

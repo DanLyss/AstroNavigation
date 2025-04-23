@@ -1,55 +1,47 @@
 package com.example.cameralong
 
 import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
+import android.hardware.*
+import kotlin.math.roundToInt
 
-class SensorHandler(context: Context) : SensorEventListener {
+class SensorHandler(private val context: Context) : SensorEventListener {
 
-    private val sensorManager =
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
-    private val gravity = FloatArray(3)
-    private val geomagnetic = FloatArray(3)
+    private var orientationAngles = FloatArray(3)
+    private var rotationMatrix = FloatArray(9)
 
-    var azimuth: Float = 0f
-    var pitch: Float = 0f
-    var roll: Float = 0f
+    private var onChangeListener: ((String) -> Unit)? = null
 
-    fun register() {
-        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.also {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-        }
-        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)?.also {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-        }
+    fun startListening() {
+        sensorManager.registerListener(this, rotationVectorSensor, SensorManager.SENSOR_DELAY_UI)
     }
 
-    fun unregister() {
+    fun stopListening() {
         sensorManager.unregisterListener(this)
     }
 
-    override fun onSensorChanged(event: SensorEvent?) {
-        when (event?.sensor?.type) {
-            Sensor.TYPE_ACCELEROMETER -> {
-                System.arraycopy(event.values, 0, gravity, 0, event.values.size)
-            }
-            Sensor.TYPE_MAGNETIC_FIELD -> {
-                System.arraycopy(event.values, 0, geomagnetic, 0, event.values.size)
-            }
-        }
+    fun setOnChangeListener(listener: (String) -> Unit) {
+        onChangeListener = listener
+    }
 
-        val rotationMatrix = FloatArray(9)
-        val orientation = FloatArray(3)
-        if (SensorManager.getRotationMatrix(rotationMatrix, null, gravity, geomagnetic)) {
-            SensorManager.getOrientation(rotationMatrix, orientation)
-            azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
-            pitch = Math.toDegrees(orientation[1].toDouble()).toFloat()
-            roll = Math.toDegrees(orientation[2].toDouble()).toFloat()
+    fun getLatestAngles(): String {
+        val azimuth = Math.toDegrees(orientationAngles[0].toDouble()).roundToInt()
+        val pitch = Math.toDegrees(orientationAngles[1].toDouble()).roundToInt()
+        val roll = Math.toDegrees(orientationAngles[2].toDouble()).roundToInt()
+        return "Azimuth: $azimuth°, Pitch: $pitch°, Roll: $roll°"
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+            SensorManager.getOrientation(rotationMatrix, orientationAngles)
+            onChangeListener?.invoke(getLatestAngles())
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // no-op
+    }
 }
