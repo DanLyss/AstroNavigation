@@ -1,10 +1,13 @@
-import kotlin.math.*
+package kotlintranslation
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder
+import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer
+import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.ArrayRealVector
+import org.apache.commons.math3.util.Pair
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoField
-import org.apache.commons.math3.fitting.leastsquares.*
-import org.apache.commons.math3.linear.*
-import org.apache.commons.math3.stat.descriptive.summary.Sum
-import org.apache.commons.math3.util.Pair
+import kotlin.math.*
 
 
 object LattLongCalc {
@@ -29,7 +32,7 @@ object LattLongCalc {
         return phi * phi * a + phi * b + c
     }
 
-    private fun norm(x: Double, lower: Double, upper: Double): Double {
+    fun norm(x: Double, lower: Double, upper: Double): Double {
         var result = x
         while (result < lower) result += upper - lower
         while (result > upper) result -= upper - lower
@@ -143,7 +146,6 @@ object LattLongCalc {
         val T = (jd - 2451545.0) / 36525
         val L0 = (280.46646 + 36000.76983 * T + 0.0003032 * T * T) % 360
         val M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) % 360
-        val e = 0.016708634 - 0.000042037 * T - 0.0000001267 * T * T
 
         val C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * sin(Math.toRadians(M)) +
                 (0.019993 - 0.000101 * T) * sin(Math.toRadians(2 * M)) +

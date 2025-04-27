@@ -1,6 +1,7 @@
-import kotlin.math.*
+package kotlintranslation
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.*
 
 class Star(
     var xMeasuredCoord: Double,
