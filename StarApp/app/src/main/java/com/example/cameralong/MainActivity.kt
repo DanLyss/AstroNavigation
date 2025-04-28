@@ -1,5 +1,7 @@
 package com.example.cameralong
 
+
+import android.os.Environment
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -56,6 +58,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        TelegramSender.init(applicationContext)
         setContentView(R.layout.activity_main)
 
         previewView = findViewById(R.id.previewView)
@@ -244,6 +247,7 @@ private fun runSolver(imageFile: File) {
 
         if (corrFile.exists()) {
                 val anglesToSend = if (currentAngles == "unknown") "Photo has no EXIF" else currentAngles
+                saveFileToDownloads(corrFile)
                 TelegramSender.sendPhoto(corrFile, currentLocation, anglesToSend)
                 statusText.text = "✅ Solver завершён"
         } else {
@@ -365,6 +369,21 @@ private fun runSolver(imageFile: File) {
             }
         }, ContextCompat.getMainExecutor(this))
     }
+    private fun saveFileToDownloads(sourceFile: File) {
+        try {
+            val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsFolder.exists()) {
+                downloadsFolder.mkdirs()
+            }
+            val destFile = File(downloadsFolder, sourceFile.name)
+            sourceFile.copyTo(destFile, overwrite = true)
+
+            Toast.makeText(this, "✅ Файл сохранен: ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "❌ Ошибка сохранения: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
 
     override fun onPause() {
         super.onPause()
