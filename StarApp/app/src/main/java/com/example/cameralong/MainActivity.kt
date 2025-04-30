@@ -243,16 +243,30 @@ private fun runSolver(imageFile: File) {
         }
 
 
-        val corrFile = File("$astroPath/output/input.corr")
+        val outputDir = File("$astroPath/output")
 
-        if (corrFile.exists()) {
-                val anglesToSend = if (currentAngles == "unknown") "Photo has no EXIF" else currentAngles
-                saveFileToDownloads(corrFile)
-                TelegramSender.sendPhoto(corrFile, currentLocation, anglesToSend)
-                statusText.text = "✅ Solver завершён"
+        if (outputDir.exists() && outputDir.isDirectory) {
+            val filesToSend = outputDir.listFiles()?.filter { it.isFile } ?: emptyList()
+            val corrFile = filesToSend.find { it.name.contains("corr") }
+            if (corrFile != null) {
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("imagePath", imageFile.absolutePath)
+                startActivity(intent)
+            }
+            if (filesToSend.isNotEmpty()) {
+                for (file in filesToSend) {
+                    val anglesToSend = if (currentAngles == "unknown") "Photo has no EXIF" else currentAngles
+                    saveFileToDownloads(file)
+                    TelegramSender.sendPhoto(file, currentLocation, anglesToSend)
+                }
+                statusText.text = "✅ Все файлы из output отправлены"
+            } else {
+                statusText.text = "⚠️ Папка output пуста"
+            }
         } else {
-            statusText.text = "⚠️ .corr не найден"
+            statusText.text = "⚠️ Папка output не найдена"
         }
+
 
         TelegramSender.sendPhoto(stdout, "STDOUT log", "📄 solve-field stdout")
         TelegramSender.sendPhoto(stderr, "STDERR log", "📄 solve-field stderr")
