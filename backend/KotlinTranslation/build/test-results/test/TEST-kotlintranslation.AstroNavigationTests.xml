@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="kotlintranslation.AstroNavigationTests" tests="24" skipped="0" failures="12" errors="0" timestamp="2025-05-05T16:51:03.221Z" hostname="ARTEM_TELKOV_HP" time="0.343">
+<testsuite name="kotlintranslation.AstroNavigationTests" tests="24" skipped="0" failures="12" errors="0" timestamp="2025-05-05T17:53:03.926Z" hostname="ARTEM_TELKOV_HP" time="0.407">
   <properties/>
-  <testcase name="Latitude/Azimuth Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.115">
+  <testcase name="Latitude/Azimuth Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.163">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.01">
+  <testcase name="Latitude/Azimuth Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.011">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.011">
+  <testcase name="Latitude/Azimuth Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.013">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
@@ -47,85 +47,85 @@
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #5" classname="kotlintranslation.AstroNavigationTests" time="0.01">
+  <testcase name="Latitude/Azimuth Test Case #5" classname="kotlintranslation.AstroNavigationTests" time="0.014">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.01">
+  <testcase name="Latitude/Azimuth Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.012">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #7" classname="kotlintranslation.AstroNavigationTests" time="0.012">
+  <testcase name="Latitude/Azimuth Test Case #7" classname="kotlintranslation.AstroNavigationTests" time="0.013">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #8" classname="kotlintranslation.AstroNavigationTests" time="0.01">
+  <testcase name="Latitude/Azimuth Test Case #8" classname="kotlintranslation.AstroNavigationTests" time="0.012">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.01">
+  <testcase name="Latitude/Azimuth Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.013">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Latitude/Azimuth Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.01">
+  <testcase name="Latitude/Azimuth Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.012">
     <failure message="org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Latitude error too big ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
@@ -138,7 +138,7 @@
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
@@ -151,60 +151,48 @@
 	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
 	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
 	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:34)
+	at app//kotlintranslation.AstroNavigationTests.testLatitudeAndAzimuth$lambda$2$lambda$1(AstroNavigationTests.kt:30)
 	at java.base@21.0.6/java.util.Optional.ifPresent(Optional.java:178)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base@21.0.6/java.util.ArrayList.forEach(ArrayList.java:1596)
 </failure>
   </testcase>
-  <testcase name="Longitude Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.009"/>
-  <testcase name="Longitude Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.005"/>
-  <testcase name="Longitude Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
-  <testcase name="Longitude Test Case #4" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
+  <testcase name="Longitude Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.008"/>
+  <testcase name="Longitude Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.004"/>
+  <testcase name="Longitude Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Longitude Test Case #4" classname="kotlintranslation.AstroNavigationTests" time="0.009"/>
   <testcase name="Longitude Test Case #5" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
-  <testcase name="Longitude Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.008"/>
+  <testcase name="Longitude Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.005"/>
   <testcase name="Longitude Test Case #7" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
   <testcase name="Longitude Test Case #8" classname="kotlintranslation.AstroNavigationTests" time="0.005"/>
-  <testcase name="Longitude Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.005"/>
-  <testcase name="Longitude Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Longitude Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Longitude Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
   <testcase name="Longitude Test Case #11" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
-  <testcase name="Longitude Test Case #12" classname="kotlintranslation.AstroNavigationTests" time="0.008"/>
-  <system-out><![CDATA[57.92908512809887
-2.049717682850396
-Latitude error: 4.871385128098872 deg
+  <testcase name="Longitude Test Case #12" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
+  <system-out><![CDATA[Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 4.871385128098872 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 4.871385128098872 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 4.871385128098872 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 4.871385128098872 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 4.871385128098872 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 16.037154572543315 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 17.145657350321095 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 17.145657350321095 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 17.145657350321095 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 11.424414871901128 deg
+Latitude error: 2.049717682850396 deg
 57.92908512809887
-2.049717682850396
-Latitude error: 11.424414871901128 deg
+Latitude error: 2.049717682850396 deg
+57.92908512809887
 Longitude error: 1.4261715381888997 deg
 Longitude error: 1.231190551497221 deg
 Longitude error: 0.8991329432160402 deg

@@ -42,15 +42,27 @@ object CorrClusterReader {
         return results
     }
 
-    fun fromCorrFile(corrPath: String, matchWeightThreshold: Double = 0.995): List<Star> {
+    fun fromCorrFile(
+        corrPath: String,
+        matchWeightThreshold: Double = 0.995,
+        sizex: Int = 0,
+        sizey: Int = 0
+    ): List<Star> {
         val data = analyzeCorr(corrPath)
         val filtered = data.filter { it["match_weight"] ?: 0.0 > matchWeightThreshold }
         require(filtered.isNotEmpty()) { "No high-confidence star data in $corrPath" }
 
         val xList = filtered.map { it["field_x"] ?: 0.0 }
-        val yList = filtered.map { -(it["field_y"] ?: 0.0) }
+        val yList = filtered.map { (it["field_y"] ?: 0.0) }
+
         val cx = xList.average()
         val cy = yList.average()
+
+        if (sizex > 0 && sizey > 0) {
+            val cx = sizex / 2
+            val cy = sizey / 2
+        }
+
 
         val offset = filtered
             .mapIndexed { i, props -> xList[i] to yList[i] }
@@ -59,9 +71,9 @@ object CorrClusterReader {
 
         return filtered.map { props ->
             val rawX = props["field_x"] ?: 0.0
-            val rawY = -(props["field_y"] ?: 0.0)
+            val rawY = (props["field_y"] ?: 0.0)
             val x = rawX - offset.first
-            val y = rawY - offset.second
+            val y = -rawY + offset.second
             val ra = Math.toRadians(props["field_ra"] ?: 0.0)
             val dec = Math.toRadians(props["field_dec"] ?: 0.0)
             Star(x, y, ra, dec)
