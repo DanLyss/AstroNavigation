@@ -19,6 +19,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    reports.html.required.set(false)
 }
 
 sourceSets {
