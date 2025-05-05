@@ -90,8 +90,7 @@ def process_astrometry_image(
         run_solve_field()
         time.sleep(2)  # Let solve-field finish
 
-    # corr_path = image_path.replace(".jpg", ".corr")
-    corr_path = image_path
+    corr_path = image_path.replace(".jpg", ".corr")
     AM_output = analyze_corr(corr_path)
     if not AM_output:
         print("No star data found, exiting.")
