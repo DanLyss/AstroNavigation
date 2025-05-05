@@ -58,20 +58,28 @@ def process_astrometry_image(
 
         for star_data in AM_output:
             if star_data["match_weight"] > match_weight_threshold:
-                x.append(star_data["field_x"] - 1048)
-                y.append(-star_data["field_y"] + 1152)
-
+                x.append(star_data["field_x"])
+                y.append(-star_data["field_y"])
+        offset = min(zip(x, y), key=lambda p: (p[0] - np.mean(x)) ** 2 + (p[1] - np.mean(y)) ** 2)
+        base_star = None
+        for star_data in AM_output:
+            if star_data["match_weight"] > match_weight_threshold:
                 stars.append(Star(
-                    star_data["field_x"] - 1048,
-                    -star_data["field_y"] + 1152,  # Flip Y
+                    star_data["field_x"] - offset[0],
+                    -star_data["field_y"] + offset[1],  # Flip Y
                     np.deg2rad(star_data["field_ra"]),
                     np.deg2rad(star_data["field_dec"])
                 ))
+                if star_data["field_x"] - offset[0] == 0 and -star_data["field_y"] + offset[1] == 0:
+                    base_star = stars[-1]
 
-        if len(stars) < max_star_count:
+        if len(stars) < max_star_count or base_star is None:
             raise ValueError(f"Not enough high-confidence stars found (only {len(stars)})")
 
         selected_stars = np.random.choice(stars, max_star_count, replace=False)
+        if not base_star in selected_stars:
+            selected_stars.pop()
+            selected_stars.append(base_star)
         return Star_Cluster(selected_stars,
                             positional_angle=np.deg2rad(pos_angle_deg),
                             rotation_angle=np.deg2rad(rot_angle_deg),
@@ -97,7 +105,7 @@ def process_astrometry_image(
 
 if __name__ == "__main__":
     cluster = process_astrometry_image(
-        image_path="input.corr",
+        image_path="input.jpg",
         output_file="cluster_output.txt",
         arcsec_per_pix=500,
         delta=499,
@@ -111,6 +119,5 @@ if __name__ == "__main__":
 
     if cluster is not None:
         print("Cluster loaded with", len(cluster.stars), "stars")
-        print("latitude = ", np.rad2deg(cluster.phi), "actual latitude = ", 53.165437)
-        print("longitude = ", np.rad2deg(cluster.long), "actual longitude = ", 8.6555426)
-
+        # print("latitude = ", np.rad2deg(cluster.phi), "actual latitude = ", 53.165437)
+        # print("longitude = ", np.rad2deg(cluster.long), "actual longitude = ", 8.6555426)

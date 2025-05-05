@@ -36,7 +36,7 @@ class TestAstrometryGroundTruth(unittest.TestCase):
                 "pos_angle": 81.96182813671038,
                 "rot_angle": 29.98584423820313,
                 "seed": 0,
-                "run_astrometry": False,
+                "run_astrometry": True,
                 "arcsec_per_pix": 5,
                 "delta": 5,
                 "match_weight_threshold": 0.99,
