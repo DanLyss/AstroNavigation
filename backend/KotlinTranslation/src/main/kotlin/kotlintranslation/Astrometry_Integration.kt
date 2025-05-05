@@ -3,71 +3,68 @@ package kotlintranslation
 import java.io.File
 import nom.tam.fits.Fits
 import nom.tam.fits.BinaryTableHDU
+import nom.tam.util.ColumnTable
 import kotlin.math.pow
-
+import kotlintranslation.Star
 
 object CorrClusterReader {
-
-    fun fromCorrFile(
-        corrPath: String,
-        matchWeightThreshold: Double = 0.995
-    ): List<Star> {
-
+    private fun analyzeCorr(corrPath: String): List<Map<String, Double>> {
         val file = File(corrPath)
         require(file.exists()) { "Error: .corr file not found at $corrPath" }
-
 
         val fits = Fits(corrPath)
         val hdus = fits.read()
         val hdu = hdus[1] as BinaryTableHDU
-        @Suppress("UNCHECKED_CAST")
-        val table = hdu.kernel as Array<Array<Any>>
-
-
-        val colNames: List<String> = (0 until hdu.nCols).map { hdu.getColumnName(it) }
-        val colIndex: Map<String, Int> = colNames.withIndex().associate { it.value to it.index }
-
+        val ct = hdu.kernel as ColumnTable<*>
+        val nRows = ct.nRows
+        val nCols = ct.nCols
 
         val fieldNames = listOf("field_x", "field_y", "field_ra", "field_dec", "match_weight")
+        val colNames = (0 until nCols).map { hdu.getColumnName(it) }
+        val colIndex = colNames.withIndex().associate { it.value to it.index }
 
-
-        val data: List<Map<String, Double>> = table.map { row: Array<Any> ->
-            val map = mutableMapOf<String, Double>()
+        val results = mutableListOf<Map<String, Double>>()
+        for (r in 0 until nRows) {
+            val rowMap = mutableMapOf<String, Double>()
             for (field in fieldNames) {
                 val idx = colIndex[field] ?: continue
-                map[field] = (row[idx] as Number).toDouble()
+                val raw = ct.getElement(r, idx)
+                val value = when (raw) {
+                    is Number -> raw.toDouble()
+                    is DoubleArray -> raw.first()
+                    is Array<*> -> (raw[0] as Number).toDouble()
+                    else -> throw IllegalArgumentException("Unexpected cell type: ${'$'}{raw.javaClass}")
+                }
+                rowMap[field] = value
             }
-            map
+            results += rowMap
         }
+        return results
+    }
 
+    fun fromCorrFile(corrPath: String, matchWeightThreshold: Double = 0.995): List<Star> {
+        val data = analyzeCorr(corrPath)
+        val filtered = data.filter { it["match_weight"] ?: 0.0 > matchWeightThreshold }
+        require(filtered.isNotEmpty()) { "No high-confidence star data in $corrPath" }
 
-        val filtered: List<Map<String, Double>> = data.filter { props: Map<String, Double> ->
-            (props["match_weight"] ?: 0.0) > matchWeightThreshold
-        }
-        require(filtered.isNotEmpty()) { "No high-confidence star data found in $corrPath" }
-
-
-        val xList: List<Double> = filtered.map { props: Map<String, Double> -> props["field_x"] ?: 0.0 }
-        val yList: List<Double> = filtered.map { props: Map<String, Double> -> -(props["field_y"] ?: 0.0) }
+        val xList = filtered.map { it["field_x"] ?: 0.0 }
+        val yList = filtered.map { -(it["field_y"] ?: 0.0) }
         val cx = xList.average()
         val cy = yList.average()
 
+        val offset = filtered
+            .mapIndexed { i, props -> xList[i] to yList[i] }
+            .minByOrNull { (x, y) -> (x - cx).pow(2) + (y - cy).pow(2) }
+            ?: (0.0 to 0.0)
 
-        val offsetPair: Pair<Double, Double> = filtered
-            .mapIndexed { idx: Int, props: Map<String, Double> -> Pair(xList[idx], yList[idx]) }
-            .minByOrNull { p: Pair<Double, Double> -> (p.first - cx).pow(2) + (p.second - cy).pow(2) }
-            ?: Pair(0.0, 0.0)
-
-        val stars: List<Star> = filtered.map { props: Map<String, Double> ->
+        return filtered.map { props ->
             val rawX = props["field_x"] ?: 0.0
             val rawY = -(props["field_y"] ?: 0.0)
-            val x = rawX - offsetPair.first
-            val y = rawY + offsetPair.second
+            val x = rawX - offset.first
+            val y = rawY - offset.second
             val ra = Math.toRadians(props["field_ra"] ?: 0.0)
             val dec = Math.toRadians(props["field_dec"] ?: 0.0)
             Star(x, y, ra, dec)
         }
-
-        return stars
     }
 }
