@@ -2,22 +2,25 @@ import os
 import subprocess
 import time
 from astropy.io import fits
+from numpy.core.defchararray import center
+
 from AstroNavigation.backend.math.Star_Star_Cluster import Star, Star_Cluster
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def process_astrometry_image(
-    image_path: str,
-    astrometry_path: str = "/usr/bin/solve-field",
-    output_file: str = "cluster_output.txt",
-    arcsec_per_pix: float = 220,
-    delta: float = 10,
-    pos_angle_deg: float = 10,
-    rot_angle_deg: float = 90,
-    match_weight_threshold: float = 0.995,
-    max_star_count: int = 10,
-    run_astrometry: bool = True,
-    seed: int = 0
+        image_path: str,
+        astrometry_path: str = "/usr/bin/solve-field",
+        output_file: str = "cluster_output.txt",
+        arcsec_per_pix: float = 220,
+        delta: float = 10,
+        pos_angle_deg: float = 10,
+        rot_angle_deg: float = 90,
+        match_weight_threshold: float = 0.995,
+        max_star_count: int = 10,
+        run_astrometry: bool = True,
+        seed: int = 0
 ) -> Star_Cluster | None:
     np.random.seed(seed)
 
@@ -50,11 +53,17 @@ def process_astrometry_image(
 
     def extract_cluster_from_am_output(AM_output):
         stars = []
+        x = []
+        y = []
+
         for star_data in AM_output:
             if star_data["match_weight"] > match_weight_threshold:
+                x.append(star_data["field_x"] - 1048)
+                y.append(-star_data["field_y"] + 1152)
+
                 stars.append(Star(
-                    star_data["field_x"],
-                    -star_data["field_y"],  # Flip Y
+                    star_data["field_x"] - 1048,
+                    -star_data["field_y"] + 1152,  # Flip Y
                     np.deg2rad(star_data["field_ra"]),
                     np.deg2rad(star_data["field_dec"])
                 ))
@@ -65,14 +74,16 @@ def process_astrometry_image(
         selected_stars = np.random.choice(stars, max_star_count, replace=False)
         return Star_Cluster(selected_stars,
                             positional_angle=np.deg2rad(pos_angle_deg),
-                            rotation_angle=np.deg2rad(rot_angle_deg))
+                            rotation_angle=np.deg2rad(rot_angle_deg),
+                            timeGMT="2025-04-25T23:46:00+02:00")
 
     # --- Main execution ---
     if run_astrometry:
         run_solve_field()
         time.sleep(2)  # Let solve-field finish
 
-    corr_path = image_path.replace(".jpg", ".corr")
+    # corr_path = image_path.replace(".jpg", ".corr")
+    corr_path = image_path
     AM_output = analyze_corr(corr_path)
     if not AM_output:
         print("No star data found, exiting.")
@@ -86,17 +97,20 @@ def process_astrometry_image(
 
 if __name__ == "__main__":
     cluster = process_astrometry_image(
-        image_path="/mnt/c/Users/Dan/Downloads/photo_2024-08-27_22-47-37.jpg",
+        image_path="input.corr",
         output_file="cluster_output.txt",
-        arcsec_per_pix=220,
-        delta=10,
-        pos_angle_deg=10,
-        rot_angle_deg=90,
+        arcsec_per_pix=500,
+        delta=499,
+        pos_angle_deg=81.96182813671038,
+        rot_angle_deg=29.98584423820313,
         match_weight_threshold=0.995,
-        max_star_count=10,
+        max_star_count=15,
         run_astrometry=False,
         seed=0
     )
 
     if cluster is not None:
         print("Cluster loaded with", len(cluster.stars), "stars")
+        print("latitude = ", np.rad2deg(cluster.phi), "actual latitude = ", 53.165437)
+        print("longitude = ", np.rad2deg(cluster.long), "actual longitude = ", 8.6555426)
+

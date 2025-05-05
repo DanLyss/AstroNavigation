@@ -1,4 +1,6 @@
 package kotlintranslation
+
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.*
@@ -34,21 +36,31 @@ class Star(
     }
 
     fun precalculateABCbeta(other: Star, axis: Int, pixLength: Double): Quadruple {
-        val P1 = this.copy().apply {
-            if (axis == 0) xCoord = abs(xCoord!!)
-            if (axis == 1) yCoord = abs(yCoord!!)
+        var P1 = this.copy()
+        var P2 = other.copy()
+        if (axis == 0) {
+            P1.xCoord = abs(P1.xCoord!!)
+            P2.xCoord = abs(P2.xCoord!!)
         }
-        val P2 = other.copy().apply {
-            if (axis == 0) xCoord = abs(xCoord!!)
-            if (axis == 1) yCoord = abs(yCoord!!)
+        if (axis == 1) {
+            P1.yCoord = abs(P1.yCoord!!)
+            P2.yCoord = abs(P2.yCoord!!)
         }
-
-        return if (axis == 0) {
-            if (P1.xCoord!! > P2.xCoord!!) P1 to P2 else P2 to P1
-            Quadruple(P1.xCoord!!, P2.xCoord!! - P1.xCoord!!, pixLength - P2.xCoord!!, P1.angularXProjDist(P2))
+        if (axis == 0) {
+            if (P1.xCoord!! > P2.xCoord!!) {
+                val temp = P1.copy()
+                P1 = P2.copy()
+                P2 = temp.copy()
+            }
+            return Quadruple(P1.xCoord!!, P2.xCoord!! - P1.xCoord!!, pixLength - P2.xCoord!!, P1.angularXProjDist(P2))
         } else {
-            if (P1.yCoord!! > P2.yCoord!!) P1 to P2 else P2 to P1
-            Quadruple(P1.yCoord!!, P2.yCoord!! - P1.yCoord!!, pixLength - P2.yCoord!!, P1.angularYProjDist(P2))
+            if (P1.yCoord!! > P2.yCoord!!) {
+                val temp = P1.copy()
+                P1 = P2.copy()
+                P2 = temp.copy()
+            }
+            return Quadruple(P1.yCoord!!, P2.yCoord!! - P1.yCoord!!, pixLength - P2.yCoord!!, P1.angularYProjDist(P2))
+
         }
     }
 
@@ -99,10 +111,13 @@ class StarCluster(
         solveAngularSizes()
         setAltAzForAll()
         val result = LattLongCalc.meanLatitude(this)
-        AzStar0 = result.first
-        phi = result.second
+        AzStar0 = result.second
+        phi = result.first
         makeAzAbsolute()
-        longitude = LattLongCalc.meanLongitude(this, ZonedDateTime.parse(timeGMT, DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+        val dtUtc = ZonedDateTime
+            .parse(timeGMT, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            .withZoneSameInstant(ZoneOffset.UTC)
+        longitude = LattLongCalc.meanLongitude(this, dtUtc)
     }
 
     private fun setNormalXYForAll() {

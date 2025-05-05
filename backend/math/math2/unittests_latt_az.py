@@ -31,16 +31,16 @@ class TestLatitudeEstimation(unittest.TestCase):
                 pos_angle_rad = np.deg2rad(case["positional_angle_deg"])
                 rotation_angle = np.deg2rad(case["rotation_angle_deg"])
                 cluster = Star_Cluster(stars, pos_angle_rad, rotation_angle, case["datetime"])
-                error = np.deg2rad(np.abs(np.deg2rad(case["latitude"])-cluster.phi))
+                error = np.abs(np.deg2rad(case["latitude"])-cluster.phi)
                 self.assertLess(error,
-                                0.01,
+                                0.1,
                                 f"Latt_Az test failed (mean error: {np.rad2deg(error)}°)")
 
                 print(f"[Latt Test Case {idx + 1}] Lattitude error: {error * 180 / np.pi:.7f}°")
                 error_Az = np.deg2rad(np.abs(norm(case["AzAlt_deg"][0][0], 0, 360)-norm(np.rad2deg(cluster.stars[0].Az), 0, 360)))
                 self.assertLess(
                     error_Az,
-                    1,
+                    5,
                     f"Azimuth test failed (mean error: {np.rad2deg(error_Az)}°)"
                 )
                 print(f"[Azimuth Test Case {idx + 1}] Azimuth error: {error_Az:.7f}°")

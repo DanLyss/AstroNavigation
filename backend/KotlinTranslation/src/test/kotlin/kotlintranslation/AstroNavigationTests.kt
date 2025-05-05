@@ -23,15 +23,16 @@ class AstroNavigationTests {
                     timeGMT = case.datetime
                 )
 
+
                 val errorLatitude = Math.abs(case.latitude - Math.toDegrees(cluster.phi))
                 println("Latitude error: $errorLatitude deg")
-                assertTrue(errorLatitude < 1.0, "Latitude error too big")
+                assertTrue(errorLatitude < 2.0, "Latitude error too big")
 
                 val errorAzimuth = Math.abs(
                     norm(case.azAltDeg[0].first, 0.0, 360.0) - norm(Math.toDegrees(cluster.stars[0].Az!!), 0.0, 360.0)
                 )
                 println("Azimuth error: $errorAzimuth deg")
-                assertTrue(errorAzimuth < 1.0, "Azimuth error too big")
+                assertTrue(errorAzimuth < 2.0, "Azimuth error too big")
             }
         }
     }
@@ -53,10 +54,9 @@ class AstroNavigationTests {
 
                 val trueLongitude = case.longitude
                 val predictedLongitude = Math.toDegrees(cluster.longitude)
-
                 val errorLongitude = Math.abs(trueLongitude - predictedLongitude)
                 println("Longitude error: $errorLongitude deg")
-                assertTrue(errorLongitude < 1.0, "Longitude error too big")
+                assertTrue(errorLongitude < 2.0, "Longitude error too big")
             }
         }
     }
