@@ -30,6 +30,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -67,6 +68,10 @@ dependencies {
     implementation("org.json:json:20231013")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.0")
+
     implementation(files("libs/nom-tam-fits-1.15.2.jar"))
     implementation("androidx.exifinterface:exifinterface:1.3.6")
+
+    implementation("org.apache.commons:commons-math3:3.6.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 }

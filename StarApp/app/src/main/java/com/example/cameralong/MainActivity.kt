@@ -106,11 +106,6 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.captureButton).setOnClickListener {
             currentAngles = sensorHandler.getLatestAngles()
-            if (currentLocation == "unknown") {
-                Toast.makeText(this, "⏳ Ожидание локации...", Toast.LENGTH_SHORT).show()
-                TelegramSender.sendText("⏳ Локация ещё не получена, подожди пару секунд и попробуй снова")
-                return@setOnClickListener
-            }
             takePhoto()
         }
 
@@ -326,11 +321,6 @@ private fun runSolver(imageFile: File) {
                     destFile.outputStream().use { output ->
                         input.copyTo(output)
                     }
-                }
-                if (currentLocation == "unknown") {
-                    Toast.makeText(this, "⏳ Ожидание локации...", Toast.LENGTH_SHORT).show()
-                    TelegramSender.sendText("⏳ Локация ещё не получена, подожди пару секунд и попробуй снова")
-                    return
                 }
                 val exif = androidx.exifinterface.media.ExifInterface(destFile.absolutePath)
                 val userComment = exif.getAttribute(androidx.exifinterface.media.ExifInterface.TAG_USER_COMMENT)

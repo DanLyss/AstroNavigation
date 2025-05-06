@@ -68,8 +68,17 @@ class ResultActivity : AppCompatActivity() {
 
         // On click: go to the next screen
         continueButton.setOnClickListener {
-            val intent = Intent(this, StarsActivity::class.java)
-            startActivity(intent)
-        }
+                 val imgPath  = intent.getStringExtra("imagePath")
+                     ?: throw IllegalStateException("No imagePath")
+                 val corrPath = File(imgPath).nameWithoutExtension + ".corr"
+                 val fullCorr = File(filesDir, "astro/output/$corrPath").absolutePath
+
+                 Intent(this, StarsActivity::class.java).also { i ->
+                         i.putExtra("imagePath", imgPath)
+                         i.putExtra("corrPath", fullCorr)
+                         startActivity(i)
+                     }
+                 finish()
+             }
     }
 }
