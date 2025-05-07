@@ -14,6 +14,7 @@ object AstrometryReader {
         val fits = Fits(corrPath)
         val hdus = fits.read()
         val hdu = hdus[1] as BinaryTableHDU
+
         val ct = hdu.kernel as ColumnTable<*>
         val nRows = ct.nRows
         val nCols = ct.nCols
