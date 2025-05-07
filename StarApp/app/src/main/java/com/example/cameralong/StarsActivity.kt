@@ -6,51 +6,121 @@ import android.widget.TextView
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.exifinterface.media.ExifInterface
+import com.google.android.material.slider.Slider
 import java.io.File
 import kotlintranslation.AstrometryReader
 import kotlintranslation.StarCluster
+import kotlintranslation.Star
 
 class StarsActivity : AppCompatActivity() {
+
+    private lateinit var thresholdSlider: Slider
+    private lateinit var thresholdLabel: TextView
+    private lateinit var textView: TextView
+    private lateinit var nextButton: Button
+
+    private lateinit var imagePath: String
+    private lateinit var corrPath: String
+    private lateinit var imageFile: File
+    private lateinit var corrFile: File
+    private var width = 0
+    private var height = 0
+    private lateinit var exif: ExifInterface
+    private var yawDeg = 0.0
+    private var pitchDeg = 0.0
+    private var rollDeg = 0.0
+    private lateinit var isoTime: String
+
+    private var matchWeightThreshold = 0.995
+    private lateinit var cluster: StarCluster
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_stars)
 
-        val textView   = findViewById<TextView>(R.id.starsText)
-        val nextButton = findViewById<Button>(R.id.nextButton)
+        // Initialize views
+        textView = findViewById(R.id.starsText)
+        nextButton = findViewById(R.id.nextButton)
+        thresholdSlider = findViewById(R.id.thresholdSlider)
+        thresholdLabel = findViewById(R.id.thresholdLabel)
 
-        val imagePath = intent.getStringExtra("imagePath")
+        // Get paths from intent
+        imagePath = intent.getStringExtra("imagePath")
             ?: throw IllegalStateException("No imagePath in Intent")
-        val corrPath  = intent.getStringExtra("corrPath")
+        corrPath = intent.getStringExtra("corrPath")
             ?: throw IllegalStateException("No corrPath in Intent")
 
-        val imageFile = File(imagePath)
+        // Validate files
+        imageFile = File(imagePath)
         require(imageFile.exists()) { "Image not found at $imagePath" }
-        val corrFile  = File(corrPath)
-        require(corrFile.exists())  { "Corr file not found at $corrPath" }
+        corrFile = File(corrPath)
+        require(corrFile.exists()) { "Corr file not found at $corrPath" }
 
         // Get image dimensions
-        val (width, height) = ExifUtils.getImageDimensions(imageFile)
+        val dimensions = ExifUtils.getImageDimensions(imageFile)
+        width = dimensions.first
+        height = dimensions.second
 
         // Extract EXIF data
-        val exif = ExifInterface(imagePath)
-        val (yawDeg, pitchDeg, rollDeg) = ExifUtils.extractOrientationAngles(exif)
-        val isoTime = ExifUtils.extractDateTime(exif)
+        exif = ExifInterface(imagePath)
+        val angles = ExifUtils.extractOrientationAngles(exif)
+        yawDeg = angles.first
+        pitchDeg = angles.second
+        rollDeg = angles.third
+        isoTime = ExifUtils.extractDateTime(exif)
 
+        // Set up the threshold slider
+        thresholdSlider.value = matchWeightThreshold.toFloat()
+        updateThresholdLabel()
+
+        // Set up slider listener
+        thresholdSlider.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                matchWeightThreshold = value.toDouble()
+                updateThresholdLabel()
+                processStars()
+                updateDisplay()
+            }
+        }
+
+        // Initial processing
+        processStars()
+        updateDisplay()
+
+        // Set up next button
+        nextButton.setOnClickListener {
+            Intent(this, LocationActivity::class.java).also { intent ->
+                intent.putExtra("pred_phi", cluster.phi)
+                intent.putExtra("pred_long", cluster.longitude)
+                intent.putExtra("imagePath", imagePath)
+                startActivity(intent)
+            }
+        }
+    }
+
+    private fun updateThresholdLabel() {
+        thresholdLabel.text = "Star Match Weight Threshold: %.3f".format(matchWeightThreshold)
+    }
+
+    private fun processStars() {
+        // Process stars with current threshold
         val stars = AstrometryReader.fromCorrFile(
-            corrPath             = corrFile.absolutePath,
-            matchWeightThreshold = 0.995,
-            sizex                = width,
-            sizey                = height
+            corrPath = corrFile.absolutePath,
+            matchWeightThreshold = matchWeightThreshold,
+            sizex = width,
+            sizey = height
         )
 
-        val cluster = StarCluster(
-            stars           = stars,
-            positionalAngle = Math.toRadians(pitchDeg.toDouble()),
-            rotationAngle   = Math.toRadians(rollDeg.toDouble()),
-            timeGMT         = isoTime
+        // Create star cluster
+        cluster = StarCluster(
+            stars = stars,
+            positionalAngle = Math.toRadians(pitchDeg),
+            rotationAngle = Math.toRadians(rollDeg),
+            timeGMT = isoTime
         )
+    }
 
+    private fun updateDisplay() {
         textView.text = buildString {
             appendLine("X size: size: $width")
             appendLine("Y size: size: $height")
@@ -69,15 +139,6 @@ class StarsActivity : AppCompatActivity() {
                     "⭐ Star ${i + 1}: Alt = %.1f°, Az = %.1f°"
                         .format(Math.toDegrees(star.Alt!!), Math.toDegrees(star.Az!!))
                 )
-            }
-        }
-
-        nextButton.setOnClickListener {
-            Intent(this, LocationActivity::class.java).also { intent ->
-                intent.putExtra("pred_phi",  cluster.phi)
-                intent.putExtra("pred_long", cluster.longitude)
-                intent.putExtra("imagePath", imagePath)
-                startActivity(intent)
             }
         }
     }

@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        TelegramSender.init(applicationContext)
         setContentView(R.layout.activity_main)
 
         previewView = findViewById(R.id.previewView)
@@ -152,8 +151,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (userComment != null && userComment.contains("yaw") && userComment.contains("pitch")) {
                     currentAngles = userComment
-                    TelegramSender.sendText("📌 Angles loaded from EXIF: $currentAngles")
-                }
+                   }
                 else{
                     currentAngles = "unknown"
                 }

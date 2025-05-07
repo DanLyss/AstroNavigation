@@ -79,11 +79,8 @@ object CameraUtils {
         val capture = imageCapture ?: return
         val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile).build()
 
-        TelegramSender.sendText("📤 Starting photo capture and solver...")
-
         if (currentLocation == "unknown") {
             Toast.makeText(context, "⏳ Waiting for location...", Toast.LENGTH_SHORT).show()
-            TelegramSender.sendText("⏳ Location not yet received, wait a few seconds and try again")
             return
         }
 

@@ -30,27 +30,23 @@ object AstrometryUtils {
     fun extractZipAssets(context: Context, astroPath: String) {
         val zipFiles = listOf("astrometry.zip", "index_files.zip")
         for (zipName in zipFiles) {
-            try {
-                context.assets.open(zipName).use { zipStream ->
-                    ZipInputStream(zipStream).use { zis ->
-                        var entry = zis.nextEntry
-                        while (entry != null) {
-                            val cleanName = entry.name.removePrefix("astro/")
-                            val outFile = File(astroPath, cleanName)
+            context.assets.open(zipName).use { zipStream ->
+                ZipInputStream(zipStream).use { zis ->
+                    var entry = zis.nextEntry
+                    while (entry != null) {
+                        val cleanName = entry.name.removePrefix("astro/")
+                        val outFile = File(astroPath, cleanName)
 
-                            if (entry.isDirectory) {
-                                outFile.mkdirs()
-                            } else {
-                                outFile.parentFile?.mkdirs()
-                                FileOutputStream(outFile).use { fos -> zis.copyTo(fos) }
-                                outFile.setExecutable(true)
-                            }
-                            entry = zis.nextEntry
+                        if (entry.isDirectory) {
+                            outFile.mkdirs()
+                        } else {
+                            outFile.parentFile?.mkdirs()
+                            FileOutputStream(outFile).use { fos -> zis.copyTo(fos) }
+                            outFile.setExecutable(true)
                         }
+                        entry = zis.nextEntry
                     }
                 }
-            } catch (e: Exception) {
-                TelegramSender.sendText("❌ Error unpacking $zipName: ${e.message}")
             }
         }
     }
@@ -60,21 +56,16 @@ object AstrometryUtils {
      * @param astroPath The path to the astrometry files
      */
     fun generateAstrometryConfig(astroPath: String) {
-        try {
-            val cfgFile = File("$astroPath/bin/my.cfg")
-            val indexDir = "$astroPath"
-            cfgFile.parentFile?.mkdirs()
-            //can add more later if needed
-            val lines = listOf(
-                "index $indexDir/index-4117.fits",
-                "index $indexDir/index-4118.fits",
-                "index $indexDir/index-4119.fits"
-            )
-            cfgFile.writeText(lines.joinToString("\n"))
-            TelegramSender.sendText("✅ Config my.cfg created:\n${lines.joinToString("\n")}")
-        } catch (e: Exception) {
-            TelegramSender.sendText("❌ Error creating my.cfg: ${e.message}")
-        }
+        val cfgFile = File("$astroPath/bin/my.cfg")
+        val indexDir = "$astroPath"
+        cfgFile.parentFile?.mkdirs()
+        //can add more later if needed
+        val lines = listOf(
+            "index $indexDir/index-4117.fits",
+            "index $indexDir/index-4118.fits",
+            "index $indexDir/index-4119.fits"
+        )
+        cfgFile.writeText(lines.joinToString("\n"))
     }
 
     /**
@@ -170,14 +161,12 @@ object AstrometryUtils {
             val finished = process.waitFor(2, java.util.concurrent.TimeUnit.MINUTES)
             if (!finished) {
                 process.destroy()
-                TelegramSender.sendText("⏱ solve-field exceeded 2 min limit, process killed.")
                 statusText.text = "⚠️ Solver interrupted due to timeout"
                 return
             }
 
             val exitCode = process.exitValue()
             if (exitCode != 0) {
-                TelegramSender.sendPhoto(stderr, "STDERR log", "❗️ solve-field finished with error ($exitCode)")
                 return
             }
 
@@ -195,7 +184,6 @@ object AstrometryUtils {
                     for (file in filesToSend) {
                         val anglesToSend = if (currentAngles == "unknown") "Photo has no EXIF" else currentAngles
                         FileUtils.saveFileToDownloads(context, file)
-                        TelegramSender.sendPhoto(file, currentLocation, anglesToSend)
                     }
                     statusText.text = "✅ All files from output sent"
                 } else {
@@ -205,12 +193,9 @@ object AstrometryUtils {
                 statusText.text = "⚠️ Output folder not found"
             }
 
-            TelegramSender.sendPhoto(stdout, "STDOUT log", "📄 solve-field stdout")
-            TelegramSender.sendPhoto(stderr, "STDERR log", "📄 solve-field stderr")
 
         } catch (e: Exception) {
             statusText.text = "❌ Solver error: ${e.message}"
-            TelegramSender.sendText("❌ Exception in solver: ${e.message}")
         }
     }
 }
