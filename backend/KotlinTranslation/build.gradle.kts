@@ -1,5 +1,7 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "1.9.0"
 }
 
 repositories {
@@ -15,11 +17,17 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    // Add JUnit 4 for IDE compatibility
+    testImplementation("junit:junit:4.13.2")
 }
 
 tasks.test {
     useJUnitPlatform()
     reports.html.required.set(false)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions.freeCompilerArgs += "-Xincremental=false"
 }
 
 sourceSets {

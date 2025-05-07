@@ -1,0 +1,39 @@
+name: StarApp Tests
+
+on:
+  push:
+    branches: [ main, workspace ]
+    paths:
+      - 'StarApp/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'StarApp/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x StarApp/gradlew
+
+    - name: Run tests
+      run: |
+        cd StarApp
+        ./gradlew test
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: starapp-test-results
+        path: StarApp/app/build/reports/tests/

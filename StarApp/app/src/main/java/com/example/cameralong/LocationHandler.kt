@@ -15,11 +15,13 @@ class LocationHandler(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun startListening(onLocationChanged: (Location) -> Unit) {
-        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000L)
-            .setMinUpdateDistanceMeters(0f)
-            .setWaitForAccurateLocation(true)
-            .setMaxUpdateAgeMillis(30_000)
-            .build()
+        val request = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 2000L
+            fastestInterval = 1000L
+            smallestDisplacement = 0f
+            maxWaitTime = 30_000
+        }
 
         callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {

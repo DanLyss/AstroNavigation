@@ -10,6 +10,9 @@ class StarOverlayView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     var starPoints: List<Pair<Float, Float>> = emptyList()
+    var imageWidth: Int = 0
+    var imageHeight: Int = 0
+    var imageMatrix: Matrix? = null
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -20,8 +23,26 @@ class StarOverlayView @JvmOverloads constructor(
             isAntiAlias = true
         }
 
+        if (starPoints.isEmpty() || imageWidth <= 0 || imageHeight <= 0) {
+            return
+        }
+
+        // Calculate scaling factors
+        val viewWidth = width.toFloat()
+        val viewHeight = height.toFloat()
+        val scaleX = viewWidth / imageWidth
+        val scaleY = viewHeight / imageHeight
+        val scale = minOf(scaleX, scaleY)
+
+        // Calculate offset to center the image
+        val offsetX = (viewWidth - imageWidth * scale) / 2
+        val offsetY = (viewHeight - imageHeight * scale) / 2
+
         for ((x, y) in starPoints) {
-            canvas.drawCircle(x, y, 8f, paint)
+            // Scale and position the star point to match the image
+            val scaledX = x * scale + offsetX
+            val scaledY = y * scale + offsetY
+            canvas.drawCircle(scaledX, scaledY, 8f, paint)
         }
     }
 }

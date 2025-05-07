@@ -1,113 +1,222 @@
 
-# AstroNavigation Project 🌌📷
+# AstroNavigation Project 🌌📱
 
 ## Overview
 
-This project aims to determine coordinates just from a photo of a night sky without use of GPS or internet connection.
+AstroNavigation determines geographical coordinates (latitude and longitude) from night sky photographs without GPS or internet connectivity. The system uses astronomical calculations and star pattern recognition to determine the observer's position on Earth.
 
-## Core Components
+## Quick Start Guide
 
-### 1. `Star_Star_Cluster.py` ⭐🌠
+To build and run the AstroNavigation app:
 
-Defines the core data structures for representing stars and clusters of stars.
+1. **Prerequisites**: Install Android Studio, JDK 11, and Android SDK 28
+2. **Clone & Open**: Clone the repository and open in Android Studio
+3. **Build**: Run `gradlew assembleDebug` (Windows) or `./gradlew assembleDebug` (macOS/Linux)
+   - This will generate the APK at `StarApp/app/build/outputs/apk/debug/app-debug.apk`
+4. **Install**: Connect your Android device and run `gradlew installDebug` (Windows) or `./gradlew installDebug` (macOS/Linux)
 
-#### Classes:
+For detailed instructions, see the [Development Setup](#development-setup) and [Building the App](#building-the-app) sections below.
 
--   **Star**: Represents a single star with properties:
-    
-    -   `x_measured_coord`, `y_measured_coord`: Coordinates in the rotated reference frame.
-        
-    -   `RA`, `dec`: Right Ascension and Declination.
-        
-    -   `Alt`, `Az`: Altitude and Azimuth after transformation.
-        
-    -   Methods for computing distances (angular, planar, projections) and coordinate transformations.
-        
--   **Star_Cluster**: Represents a collection of stars from a processed image.
-    
-    -   Stores rotational and positional angles.
-        
-    -   Computes altitude and azimuth for all stars.
-        
-    -   Determines the angular size of the star cluster.
-        
-    -   Calculates approximate latitude and longitude.
-        
-    -   Writes star data to an output file.
-        
--   **Solver** (Internal): Helper class for solving projection and transformation equations.
-    
-    -   Computes image scale transformations.
-        
-    -   Filters results using statistical methods.
-        
+## Project Structure
 
-### 2. `astrometry_math1_integration.py` 🛰️🔭
+### 1. StarApp (Android Application) 📱
 
-Handles the processing of images to extract visible star coordinates using astrometry.
+A Kotlin Android application that serves as the user interface for capturing and processing night sky images.
 
-#### Functionality:
+### 2. KotlinTranslation (Backend) 🧮
 
--   `**process_astrometry_image(image_path, ...)**`
-    
-    -   Runs `solve-field` (astrometry tool) to analyze the image.
-        
-    -   Extracts celestial coordinates from `.corr` files.
-        
-    -   Filters stars based on match weight threshold.
-        
-    -   Converts matched stars into a `Star_Cluster` object.
-        
-    -   Outputs extracted data to a file.
-        
+Core astronomical calculation algorithms for:
+- Star pattern recognition
+- Coordinate transformations
+- Latitude/longitude calculations
 
-### 3. `latt_long_calc.py` 🌍🧭
+### 3. Package Organization
 
-Calculates the latitude, longitude, and azimuth based on extracted star positions.
+- **KotlinTranslation Module**: `backend/KotlinTranslation/src/main/kotlin/kotlintranslation/`
+- **StarApp Module**: `StarApp/app/src/main/java/com/example/cameralong/`
 
-#### Functions:
+## Development Setup
 
--   `**mean_lattitude(cluster)**`
-    
-    -   Computes the latitude from a star cluster using an optimization method.
-        
--   `**mean_longitude(cluster, time)**`
-    
-    -   Computes the longitude based on star positions, date, and time.
-        
--   `**true_local_time(star, day, year, latitude)**`
-    
-    -   Determines the local time based on star positions.
-        
--   `**sun_RA(day, year)**`
-    
-    -   Calculates the Right Ascension of the Sun for reference.
-        
+### Prerequisites
+- Android Studio Arctic Fox (2020.3.1) or newer
+- JDK 11 (OpenJDK or Oracle JDK)
+- Android SDK 28 (Android 9 Pie) - Do not upgrade as it may cause compatibility issues
+- Git (for cloning the repository)
+- A physical Android device (Android 8.0-9.0 recommended) or emulator for testing
 
-## Usage 🛠️
+### Environment Setup
+1. Install Android Studio from [developer.android.com](https://developer.android.com/studio)
+2. During installation, ensure Android SDK 28 is selected
+3. Install JDK 11 if not already installed
+4. Configure Android Studio to use JDK 11:
+   - Go to File > Settings > Build, Execution, Deployment > Build Tools > Gradle
+   - Set "Gradle JDK" to JDK 11
 
-1.  Capture an image of the night sky.
-    
-2.  Use `astrometry_math1_integration.py` to process the image and generate a `Star_Cluster`.
-    
-3.  Use `latt_long_calc.py` to determine the latitude, longitude, and azimuth from the extracted data.
-    
+### Project Setup
+1. Clone the repository:
+   ```
+   # Windows
+   git clone https://github.com/yourusername/AstroNavigation.git
+   cd AstroNavigation
 
-## Dependencies 📦
+   # macOS/Linux
+   git clone https://github.com/yourusername/AstroNavigation.git
+   cd AstroNavigation
+   ```
+2. Open the project in Android Studio:
+   - Select "Open an Existing Project"
+   - Navigate to the cloned repository and select it
+3. Wait for the project to sync with Gradle files
+4. If prompted to update Gradle or any plugins, decline to maintain compatibility
+5. Ensure all dependencies are resolved (check the "Build" tab for any errors)
 
--   Python 3
-    
--   `numpy`, `scipy`
-    
--   `astropy`
-    
--   `solve-field` (Astrometry.net tool)
-    
+## Building the App
 
-## Notes 📝
+### Using Android Studio
+1. Open the project in Android Studio
+2. Wait for the project to sync and index
+3. Select "Build" > "Build Project" from the menu
+4. To create an installable APK:
+   - Select "Build" > "Build Bundle(s) / APK(s)" > "Build APK(s)"
+   - The APK will be generated in `StarApp/app/build/outputs/apk/debug/`
+   - You can navigate to this directory in your file explorer to verify the APK was created
 
--   Ensure `solve-field` is installed and accessible.
-    
--   The accuracy of latitude/longitude calculations depends on star recognition precision.
-    
+### Using Command Line
+```
+# Windows
+gradlew assembleDebug
 
+# macOS/Linux
+./gradlew assembleDebug
+```
+
+The generated APK will be located at:
+`StarApp/app/build/outputs/apk/debug/app-debug.apk`
+
+After running the build command, you can verify that the APK was generated successfully by checking this directory. If the directory or APK doesn't exist, make sure you ran the build command from the project root directory.
+
+### Installing the App
+
+#### From Android Studio
+1. Connect your Android device to your computer via USB
+2. Enable USB debugging on your device (Settings > Developer options)
+3. In Android Studio, select "Run" > "Run 'app'"
+4. Select your device from the list and click "OK"
+
+#### Using Command Line
+```
+# Windows
+gradlew installDebug
+
+# macOS/Linux
+./gradlew installDebug
+```
+
+#### Manual Installation
+1. Locate the APK file at `StarApp/app/build/outputs/apk/debug/app-debug.apk` after building
+2. Transfer the APK file to your Android device
+3. On your device, navigate to the APK file and tap to install
+4. You may need to enable "Install from unknown sources" in your device settings
+
+## Testing
+
+The project has comprehensive tests for both modules:
+
+### KotlinTranslation Tests (24 tests)
+Tests for astronomical calculations (latitude, longitude, azimuth)
+
+```
+# Run all KotlinTranslation tests
+gradlew :KotlinTranslation:test
+
+# Run specific test class
+gradlew :KotlinTranslation:test --tests "kotlintranslation.AstroNavigationTests"
+```
+
+### StarApp Tests
+Tests for utility classes (EXIF extraction, FITS processing, etc.)
+
+```
+# Run StarApp tests (uses custom task to avoid AAR metadata issues)
+gradlew :StarApp:app:runUnitTests
+```
+
+### Troubleshooting
+
+#### Build Issues
+If you encounter compilation issues, try cleaning the project first:
+
+```
+# Windows
+gradlew clean
+
+# macOS/Linux
+./gradlew clean
+```
+
+Then rebuild:
+
+```
+# Windows
+gradlew assembleDebug
+
+# macOS/Linux
+./gradlew assembleDebug
+```
+
+#### Common Issues and Solutions
+
+1. **Gradle Sync Failed**
+   - Make sure you're using JDK 11
+   - Check your internet connection (needed for downloading dependencies)
+   - Try File > Invalidate Caches / Restart in Android Studio
+
+2. **Missing Android SDK Components**
+   - Open Android Studio's SDK Manager (Tools > SDK Manager)
+   - Install Android SDK Platform 28 and SDK Tools
+
+3. **Execution failed for task ':app:checkDebugAarMetadata'**
+   - This is a known issue with the project's dependencies
+   - Use the custom task for running tests: `gradlew :StarApp:app:runUnitTests`
+
+4. **Device Compatibility Issues**
+   - The app is designed for Android 8.0-9.0 (API levels 26-28)
+   - Using newer devices may cause compatibility issues
+
+
+## Usage
+
+1. Install the app on your Android device (Android 8.0-9.0 recommended)
+2. Grant necessary permissions (camera, location, storage)
+3. Capture a night sky image (use a tripod for stability)
+4. The app will analyze the image and calculate your position
+5. View your latitude and longitude on the results screen
+
+## Repository Structure
+
+```
+AstroNavigation/
+├── StarApp/                    # Android application
+│   └── app/src/               
+│       ├── main/              # Main application code
+│       └── test/              # Unit tests
+└── backend/                   
+    └── KotlinTranslation/     # Core algorithms
+```
+
+## Key Files
+
+- `MainActivity.kt`: Application entry point
+- `ResultActivity.kt`: Display captured image with star points overlay
+- `StarsActivity.kt`: Star processing and coordinate calculation
+- `LocationActivity.kt`: Display calculated coordinates
+- `Star_Star_Cluster.kt`: Star data structures and calculations
+- `Latt_Long_Calc.kt`: Latitude/longitude algorithms
+
+## Contributing
+
+We welcome contributions to the AstroNavigation project! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

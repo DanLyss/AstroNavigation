@@ -10,20 +10,37 @@ import androidx.annotation.RequiresPermission
 import okhttp3.*
 import java.io.File
 import java.io.IOException
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.asRequestBody
 
+/**
+ * Utility class for sending messages and files to Telegram
+ */
 object TelegramSender {
-    private const val botToken = "7780735429:AAGM-z5st0BNIlftDWneOPhSsb15SDhcJIs"
-    private const val chatId = "-1002506438840"
+    // These should ideally be stored in a secure way, e.g., in BuildConfig or encrypted preferences
+    private const val BOT_TOKEN_KEY = "telegram_bot_token"
+    private const val CHAT_ID_KEY = "telegram_chat_id"
+
     private val client = OkHttpClient()
-
     private lateinit var appContext: Context
+    private var botToken: String = ""
+    private var chatId: String = ""
 
+    /**
+     * Initializes the TelegramSender with the application context
+     * @param context The application context
+     */
     fun init(context: Context) {
         appContext = context.applicationContext
+
+        // In a real app, these would be retrieved from a secure storage
+        // For now, we're using the same values as before
+        botToken = "7780735429:AAGM-z5st0BNIlftDWneOPhSsb15SDhcJIs"
+        chatId = "-1002506438840"
     }
 
+    /**
+     * Checks if internet connection is available
+     * @return true if internet is available, false otherwise
+     */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     private fun isInternetAvailable(): Boolean {
         val connectivityManager = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -37,6 +54,12 @@ object TelegramSender {
         }
     }
 
+    /**
+     * Sends a photo to Telegram
+     * @param photo The photo file to send
+     * @param location The location string to include in the caption
+     * @param angles The angles string to include in the caption
+     */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun sendPhoto(photo: File, location: String, angles: String) {
         if (!photo.exists() || photo.length() == 0L) {
@@ -50,7 +73,7 @@ object TelegramSender {
         }
 
         if (!isInternetAvailable()) {
-            Log.w("TelegramSender", "⚠️ Нет интернета — фото не отправлено")
+            Log.w("TelegramSender", "⚠️ No internet connection - photo not sent")
             return
         }
 
@@ -62,7 +85,7 @@ object TelegramSender {
             .addFormDataPart("caption", caption)
             .addFormDataPart(
                 "document", photo.name,
-                photo.asRequestBody("application/octet-stream".toMediaTypeOrNull())
+                RequestBody.create(MediaType.parse("application/octet-stream"), photo)
             )
             .build()
 
@@ -77,16 +100,22 @@ object TelegramSender {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string()
+                val responseBody = response.body()
+                val body = responseBody?.string()
                 if (!response.isSuccessful) {
-                    Log.e("TelegramSender", "❌ Telegram error ${response.code}: $body")
+                    Log.e("TelegramSender", "❌ Telegram error ${response.code()}: $body")
                 } else {
                     Log.d("TelegramSender", "✅ Document sent: $body")
                 }
+                responseBody?.close()
             }
         })
     }
 
+    /**
+     * Sends a text message to Telegram
+     * @param message The message to send
+     */
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun sendText(message: String) {
         if (!this::appContext.isInitialized) {
@@ -95,7 +124,7 @@ object TelegramSender {
         }
 
         if (!isInternetAvailable()) {
-            Log.w("TelegramSender", "⚠️ Нет интернета — текст не отправлен")
+            Log.w("TelegramSender", "⚠️ No internet connection - text not sent")
             return
         }
 
@@ -117,12 +146,14 @@ object TelegramSender {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                val resp = response.body?.string()
+                val responseBody = response.body()
+                val resp = responseBody?.string()
                 if (!response.isSuccessful) {
-                    Log.e("TelegramSender", "❌ Telegram sendMessage error ${response.code}: $resp")
+                    Log.e("TelegramSender", "❌ Telegram sendMessage error ${response.code()}: $resp")
                 } else {
                     Log.d("TelegramSender", "✅ Text sent: $resp")
                 }
+                responseBody?.close()
             }
         })
     }

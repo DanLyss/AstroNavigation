@@ -54,7 +54,7 @@ class LocationActivity : AppCompatActivity() {
         } else {
             locationText.text = """
                 ⚠️ No GPS tags found in image EXIF.
-                
+
                 📐 Predicted (φ, λ):
                 Latitude:  ${"%.4f".format(predLatDeg)}°
                 Longitude: ${"%.4f".format(predLonDeg)}°

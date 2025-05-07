@@ -2,13 +2,11 @@ package com.example.cameralong
 
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import nom.tam.fits.Fits
 import java.io.File
 
 class ResultActivity : AppCompatActivity() {
@@ -32,22 +30,17 @@ class ResultActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeFile(imagePath)
                 imageView.setImageBitmap(bitmap)
 
+                // Set image dimensions on the overlay view
+                overlay.imageWidth = bitmap.width
+                overlay.imageHeight = bitmap.height
+
                 // Check if corresponding .corr file exists
-                val corrFile = File(imagePath.replace(".jpg", ".corr"))
+                val corrPath = File(imagePath).nameWithoutExtension + ".corr"
+                val corrFile = File(filesDir, "astro/output/$corrPath")
                 if (corrFile.exists()) {
                     try {
-                        val fits = Fits(corrFile)
-                        val hdus = fits.read()
-                        val tableHDU = hdus[1] as nom.tam.fits.BinaryTableHDU
-
-                        val fieldX = tableHDU.getColumn("field_x") as DoubleArray
-                        val fieldY = tableHDU.getColumn("field_y") as DoubleArray
-
-
-                        // Convert to float pairs for drawing
-                        val points = fieldX.zip(fieldY).map { (x, y) ->
-                            x.toFloat() to y.toFloat()
-                        }
+                        // Extract star coordinates using FitsUtils
+                        val points = FitsUtils.extractStarCoordinates(corrFile)
 
                         // Pass coordinates to overlay view
                         overlay.starPoints = points
@@ -57,7 +50,7 @@ class ResultActivity : AppCompatActivity() {
                         Toast.makeText(this, "Error reading .corr file: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 } else {
-                    Toast.makeText(this, ".corr file not found", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, ".corr file not found: ${corrFile.absolutePath}", Toast.LENGTH_SHORT).show()
                 }
 
             } else {
