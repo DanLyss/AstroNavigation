@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.content.Intent
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.exifinterface.media.ExifInterface
 import com.google.android.material.slider.Slider
@@ -30,6 +31,7 @@ class StarsActivity : AppCompatActivity() {
     private var pitchDeg = 0.0
     private var rollDeg = 0.0
     private lateinit var isoTime: String
+    private var currentLocation: String = "unknown"
 
     private var matchWeightThreshold = 0.995
     private lateinit var cluster: StarCluster
@@ -44,11 +46,12 @@ class StarsActivity : AppCompatActivity() {
         thresholdSlider = findViewById(R.id.thresholdSlider)
         thresholdLabel = findViewById(R.id.thresholdLabel)
 
-        // Get paths from intent
+        // Get paths and location from intent
         imagePath = intent.getStringExtra("imagePath")
             ?: throw IllegalStateException("No imagePath in Intent")
         corrPath = intent.getStringExtra("corrPath")
             ?: throw IllegalStateException("No corrPath in Intent")
+        currentLocation = intent.getStringExtra("currentLocation") ?: "unknown"
 
         // Validate files
         imageFile = File(imagePath)
@@ -70,6 +73,7 @@ class StarsActivity : AppCompatActivity() {
         isoTime = ExifUtils.extractDateTime(exif)
 
         // Set up the threshold slider
+        thresholdSlider.valueTo = 1.0f  // Set maximum value to 1.0 to prevent crashes
         thresholdSlider.value = matchWeightThreshold.toFloat()
         updateThresholdLabel()
 
@@ -93,6 +97,7 @@ class StarsActivity : AppCompatActivity() {
                 intent.putExtra("pred_phi", cluster.phi)
                 intent.putExtra("pred_long", cluster.longitude)
                 intent.putExtra("imagePath", imagePath)
+                intent.putExtra("currentLocation", currentLocation)
                 startActivity(intent)
             }
         }
@@ -103,21 +108,46 @@ class StarsActivity : AppCompatActivity() {
     }
 
     private fun processStars() {
-        // Process stars with current threshold
-        val stars = AstrometryReader.fromCorrFile(
-            corrPath = corrFile.absolutePath,
-            matchWeightThreshold = matchWeightThreshold,
-            sizex = width,
-            sizey = height
-        )
+        // Ensure threshold is not greater than 1.0 to prevent crashes
+        val safeThreshold = minOf(matchWeightThreshold, 1.0)
+        if (safeThreshold != matchWeightThreshold) {
+            matchWeightThreshold = safeThreshold
+            thresholdSlider.value = safeThreshold.toFloat()
+            updateThresholdLabel()
+        }
 
-        // Create star cluster
-        cluster = StarCluster(
-            stars = stars,
-            positionalAngle = Math.toRadians(pitchDeg),
-            rotationAngle = Math.toRadians(rollDeg),
-            timeGMT = isoTime
-        )
+        try {
+            // Process stars with safe threshold
+            val stars = AstrometryReader.fromCorrFile(
+                corrPath = corrFile.absolutePath,
+                matchWeightThreshold = safeThreshold,
+                sizex = width,
+                sizey = height
+            )
+
+            // Check if we have enough stars to proceed
+            if (stars.isEmpty()) {
+                Log.w("StarsActivity", "No stars found with threshold $safeThreshold")
+                textView.text = "No stars found with current threshold. Try lowering the threshold value."
+                nextButton.isEnabled = false
+                return
+            }
+
+            // Create star cluster
+            cluster = StarCluster(
+                stars = stars,
+                positionalAngle = Math.toRadians(pitchDeg),
+                rotationAngle = Math.toRadians(rollDeg),
+                timeGMT = isoTime
+            )
+
+            // Enable next button if we have stars
+            nextButton.isEnabled = true
+        } catch (e: Exception) {
+            Log.e("StarsActivity", "Error processing stars: ${e.message}", e)
+            textView.text = "Error processing stars: ${e.message}\nTry lowering the threshold value."
+            nextButton.isEnabled = false
+        }
     }
 
     private fun updateDisplay() {

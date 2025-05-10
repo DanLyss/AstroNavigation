@@ -135,7 +135,7 @@ object AstrometryUtils {
                         "--dir $astroPath/output " +
                         "--temp-dir $astroPath/tmp " +
                         "-O -L 0.1 -H 180.0 -u dw -z 2 -p -y -9 " +
-                        "--uniformize 0 --cpulimit 300 " +
+                        "--uniformize 0 --cpulimit 30 " +  // 30 seconds CPU time limit for better user experience
                         "--config $astroPath/bin/my.cfg -v"
             )
 
@@ -158,15 +158,27 @@ object AstrometryUtils {
                 }
             }
 
-            val finished = process.waitFor(2, java.util.concurrent.TimeUnit.MINUTES)
+            // Wait for 5 seconds max to ensure responsive UI and prevent excessive battery drain
+            val finished = process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)
             if (!finished) {
                 process.destroy()
                 statusText.text = "⚠️ Solver interrupted due to timeout"
+                // Show the photo even if solver timed out
+                val intent = Intent(context, ResultActivity::class.java)
+                intent.putExtra("imagePath", imageFile.absolutePath)
+                intent.putExtra("currentLocation", currentLocation)
+                context.startActivity(intent)
                 return
             }
 
             val exitCode = process.exitValue()
             if (exitCode != 0) {
+                statusText.text = "⚠️ Solver could not solve this image"
+                // Show the photo even if solver failed
+                val intent = Intent(context, ResultActivity::class.java)
+                intent.putExtra("imagePath", imageFile.absolutePath)
+                intent.putExtra("currentLocation", currentLocation)
+                context.startActivity(intent)
                 return
             }
 
@@ -178,6 +190,7 @@ object AstrometryUtils {
                 if (corrFile != null) {
                     val intent = Intent(context, ResultActivity::class.java)
                     intent.putExtra("imagePath", imageFile.absolutePath)
+                    intent.putExtra("currentLocation", currentLocation)
                     context.startActivity(intent)
                 }
                 if (filesToSend.isNotEmpty()) {
@@ -188,14 +201,29 @@ object AstrometryUtils {
                     statusText.text = "✅ All files from output sent"
                 } else {
                     statusText.text = "⚠️ Output folder is empty"
+                    // Show the photo even if output folder is empty
+                    val intent = Intent(context, ResultActivity::class.java)
+                    intent.putExtra("imagePath", imageFile.absolutePath)
+                    intent.putExtra("currentLocation", currentLocation)
+                    context.startActivity(intent)
                 }
             } else {
                 statusText.text = "⚠️ Output folder not found"
+                // Show the photo even if output folder not found
+                val intent = Intent(context, ResultActivity::class.java)
+                intent.putExtra("imagePath", imageFile.absolutePath)
+                intent.putExtra("currentLocation", currentLocation)
+                context.startActivity(intent)
             }
 
 
         } catch (e: Exception) {
             statusText.text = "❌ Solver error: ${e.message}"
+            // Show the photo even if there's an exception
+            val intent = Intent(context, ResultActivity::class.java)
+            intent.putExtra("imagePath", imageFile.absolutePath)
+            intent.putExtra("currentLocation", currentLocation)
+            context.startActivity(intent)
         }
     }
 }

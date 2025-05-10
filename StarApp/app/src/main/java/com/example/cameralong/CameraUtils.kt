@@ -2,10 +2,13 @@ package com.example.cameralong
 
 import android.content.Context
 import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraMetadata
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2Interop
+import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -14,6 +17,8 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import android.util.Range
+import android.util.Log
 import java.io.File
 
 /**
@@ -33,31 +38,81 @@ object CameraUtils {
         activity: AppCompatActivity,
         previewView: PreviewView,
         exposureTimeNs: Long,
+        sensitivityIso: Int = 800,
+        fpsMin: Int = 1,
+        fpsMax: Int = 30,
         onImageCaptureReady: (ImageCapture) -> Unit
     ) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
+            // 1) Preview use-case
+            val preview = Preview.Builder()
+                .build()
+                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
 
-            val builder = ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-            Camera2Interop.Extender(builder).setCaptureRequestOption(
-                CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTimeNs
-            )
+            // 2) ImageCapture builder + interop
+            val builder = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            Camera2Interop.Extender(builder).apply {
+                // Disable auto-exposure
+                setCaptureRequestOption(
+                    CaptureRequest.CONTROL_MODE,
+                    CameraMetadata.CONTROL_MODE_OFF
+                )
+                setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CameraMetadata.CONTROL_AE_MODE_OFF
+                )
+                // Exposure and ISO
+                setCaptureRequestOption(
+                    CaptureRequest.SENSOR_EXPOSURE_TIME,
+                    exposureTimeNs
+                )
+                setCaptureRequestOption(
+                    CaptureRequest.SENSOR_SENSITIVITY,
+                    sensitivityIso
+                )
+                // Limit FPS range
+                setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
+                    Range(fpsMin, fpsMax)
+                )
+            }
             val imageCapture = builder.build()
 
             try {
+                // 3) Rebind the camera
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(activity, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture)
+                // bind returns Camera, from which we'll get cameraInfo
+                val camera = cameraProvider.bindToLifecycle(
+                    activity,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageCapture
+                )
+
+                // 4) Check that the sensor supports the required exposure
+                val camera2Info = Camera2CameraInfo.from(camera.cameraInfo)
+                val exposureRange = camera2Info.getCameraCharacteristic(
+                    CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE
+                )
+                Log.i("CameraUtils", "Supported exposure range: $exposureRange")
+                // Here you can check that exposureTimeNs ∈ exposureRange
+
+                // 5) All ready - returning ImageCapture
                 onImageCaptureReady(imageCapture)
             } catch (e: Exception) {
-                Toast.makeText(activity, "❌ Camera binding error", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    activity,
+                    "❌ Camera binding error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }, ContextCompat.getMainExecutor(activity))
     }
+
 
     /**
      * Takes a photo using the image capture use case
@@ -66,6 +121,7 @@ object CameraUtils {
      * @param outputFile The output file to save the photo to
      * @param statusText The text view to update with status messages
      * @param currentLocation The current location string
+     * @param currentAngles The current orientation angles string
      * @param onPhotoSaved Callback function to be called when the photo is saved
      */
     fun takePhoto(
@@ -74,15 +130,14 @@ object CameraUtils {
         outputFile: File,
         statusText: TextView,
         currentLocation: String,
+        currentAngles: String = "unknown",
         onPhotoSaved: (File) -> Unit
     ) {
         val capture = imageCapture ?: return
         val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile).build()
 
-        if (currentLocation == "unknown") {
-            Toast.makeText(context, "⏳ Waiting for location...", Toast.LENGTH_SHORT).show()
-            return
-        }
+        // Log the current location status
+        Log.d("CameraUtils", "Taking photo with location: $currentLocation")
 
         capture.takePicture(
             outputOptions,
@@ -90,6 +145,42 @@ object CameraUtils {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     statusText.text = "📸 Photo saved. Starting solver..."
+
+                    try {
+                        val exif = androidx.exifinterface.media.ExifInterface(outputFile.absolutePath)
+
+                        // Save orientation angles to EXIF data
+                        if (currentAngles != "unknown") {
+                            exif.setAttribute(androidx.exifinterface.media.ExifInterface.TAG_USER_COMMENT, currentAngles)
+                            Log.i("CameraUtils", "Saved angles to EXIF: $currentAngles")
+                        }
+
+                        // Save location data to EXIF
+                        if (currentLocation != "unknown") {
+                            try {
+                                // Parse latitude and longitude from the currentLocation string (format: "latitude, longitude")
+                                val parts = currentLocation.split(",")
+                                if (parts.size == 2) {
+                                    val latitude = parts[0].trim().toDouble()
+                                    val longitude = parts[1].trim().toDouble()
+
+                                    // Set latitude and longitude in EXIF
+                                    exif.setLatLong(latitude, longitude)
+                                    Log.i("CameraUtils", "Saved location to EXIF: $latitude, $longitude")
+                                } else {
+                                    Log.e("CameraUtils", "Invalid location format: $currentLocation")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("CameraUtils", "Failed to parse location: ${e.message}")
+                            }
+                        }
+
+                        // Save all EXIF changes
+                        exif.saveAttributes()
+                    } catch (e: Exception) {
+                        Log.e("CameraUtils", "Failed to save EXIF data: ${e.message}")
+                    }
+
                     onPhotoSaved(outputFile)
                 }
 
