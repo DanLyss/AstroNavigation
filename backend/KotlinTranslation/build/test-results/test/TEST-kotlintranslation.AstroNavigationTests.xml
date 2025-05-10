@@ -1,30 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="kotlintranslation.AstroNavigationTests" tests="24" skipped="0" failures="0" errors="0" timestamp="2025-05-07T04:07:16" hostname="KURDAN" time="0.758">
+<testsuite name="kotlintranslation.AstroNavigationTests" tests="12" skipped="0" failures="0" errors="0" timestamp="2025-05-10T17:18:28" hostname="ARTEM_TELKOV_HP" time="0.147">
   <properties/>
-  <testcase name="Latitude/Azimuth Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.182"/>
-  <testcase name="Latitude/Azimuth Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.019"/>
-  <testcase name="Latitude/Azimuth Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.025"/>
-  <testcase name="Latitude/Azimuth Test Case #4" classname="kotlintranslation.AstroNavigationTests" time="0.095"/>
-  <testcase name="Latitude/Azimuth Test Case #5" classname="kotlintranslation.AstroNavigationTests" time="0.011"/>
-  <testcase name="Latitude/Azimuth Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.015"/>
-  <testcase name="Latitude/Azimuth Test Case #7" classname="kotlintranslation.AstroNavigationTests" time="0.026"/>
-  <testcase name="Latitude/Azimuth Test Case #8" classname="kotlintranslation.AstroNavigationTests" time="0.016"/>
-  <testcase name="Latitude/Azimuth Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.02"/>
-  <testcase name="Latitude/Azimuth Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.032"/>
-  <testcase name="Latitude/Azimuth Test Case #11" classname="kotlintranslation.AstroNavigationTests" time="0.028"/>
-  <testcase name="Latitude/Azimuth Test Case #12" classname="kotlintranslation.AstroNavigationTests" time="0.011"/>
-  <testcase name="Longitude Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.015"/>
-  <testcase name="Longitude Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.013"/>
-  <testcase name="Longitude Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.013"/>
-  <testcase name="Longitude Test Case #4" classname="kotlintranslation.AstroNavigationTests" time="0.015"/>
-  <testcase name="Longitude Test Case #5" classname="kotlintranslation.AstroNavigationTests" time="0.012"/>
-  <testcase name="Longitude Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.018"/>
-  <testcase name="Longitude Test Case #7" classname="kotlintranslation.AstroNavigationTests" time="0.023"/>
-  <testcase name="Longitude Test Case #8" classname="kotlintranslation.AstroNavigationTests" time="0.013"/>
-  <testcase name="Longitude Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.015"/>
-  <testcase name="Longitude Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.019"/>
-  <testcase name="Longitude Test Case #11" classname="kotlintranslation.AstroNavigationTests" time="0.02"/>
-  <testcase name="Longitude Test Case #12" classname="kotlintranslation.AstroNavigationTests" time="0.017"/>
+  <testcase name="Latitude/Azimuth Test Case #1" classname="kotlintranslation.AstroNavigationTests" time="0.062"/>
+  <testcase name="Latitude/Azimuth Test Case #2" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
+  <testcase name="Latitude/Azimuth Test Case #3" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
+  <testcase name="Latitude/Azimuth Test Case #4" classname="kotlintranslation.AstroNavigationTests" time="0.008"/>
+  <testcase name="Latitude/Azimuth Test Case #5" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Latitude/Azimuth Test Case #6" classname="kotlintranslation.AstroNavigationTests" time="0.01"/>
+  <testcase name="Latitude/Azimuth Test Case #7" classname="kotlintranslation.AstroNavigationTests" time="0.008"/>
+  <testcase name="Latitude/Azimuth Test Case #8" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Latitude/Azimuth Test Case #9" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Latitude/Azimuth Test Case #10" classname="kotlintranslation.AstroNavigationTests" time="0.007"/>
+  <testcase name="Latitude/Azimuth Test Case #11" classname="kotlintranslation.AstroNavigationTests" time="0.006"/>
+  <testcase name="Latitude/Azimuth Test Case #12" classname="kotlintranslation.AstroNavigationTests" time="0.004"/>
   <system-out><![CDATA[Latitude error: 0.031578116392665834 deg
 Azimuth error: 0.09619923839613875 deg
 Latitude error: 0.1643163025171006 deg
@@ -49,18 +37,6 @@ Latitude error: 0.059031134769071514 deg
 Azimuth error: 0.8455969383273896 deg
 Latitude error: 0.351816963044314 deg
 Azimuth error: 0.04758053980047805 deg
-Longitude error: 1.4261715381888997 deg
-Longitude error: 1.231190551497221 deg
-Longitude error: 0.8991329432160402 deg
-Longitude error: 0.514076505469717 deg
-Longitude error: 1.8123040238296326 deg
-Longitude error: 0.9528875351719943 deg
-Longitude error: 1.0716072674099912 deg
-Longitude error: 0.7650280725816714 deg
-Longitude error: 0.7876450336274843 deg
-Longitude error: 0.7876450336274843 deg
-Longitude error: 0.6117005107499551 deg
-Longitude error: 1.2919295770432342 deg
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
