@@ -21,7 +21,7 @@
             android:layout_height="match_parent"
             android:scaleType="fitCenter" />
 
-        <com.example.cameralong.ui.CropOverlayView
+        <com.starapp.navigation.ui.CropOverlayView
             android:id="@+id/cropOverlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

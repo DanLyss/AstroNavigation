@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cameralong"
+    namespace = "com.starapp.navigation"
     compileSdk = 28 //A MUST
 
     defaultConfig {
-        applicationId = "com.example.cameralong"
+        applicationId = "com.starapp.navigation"
         minSdk = 26
         targetSdk = 28 //A MUST
         versionCode = 1
