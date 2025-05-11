@@ -1,5 +1,6 @@
 package com.example.cameralong
 
+import com.example.cameralong.astro.FitsManager
 import nom.tam.fits.BinaryTableHDU
 import nom.tam.fits.Fits
 import org.junit.jupiter.api.BeforeEach
@@ -13,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import java.io.File
 
 @ExtendWith(MockitoExtension::class)
-class FitsUtilsTest {
+class FitsManagerTest {
 
     @Mock
     private lateinit var mockFile: File
@@ -47,7 +48,7 @@ class FitsUtilsTest {
 
         // Act & Assert - should throw exception
         assertThrows<IllegalArgumentException> {
-            FitsUtils.extractStarCoordinates(mockFile)
+            FitsManager.extractStarCoordinates(mockFile)
         }
     }
 

@@ -1,6 +1,7 @@
 package com.example.cameralong
 
 import androidx.exifinterface.media.ExifInterface
+import com.example.cameralong.util.ExifUtils
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

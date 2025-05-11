@@ -1,4 +1,4 @@
-package com.example.cameralong
+package com.example.cameralong.location
 
 import android.annotation.SuppressLint
 import android.content.Context

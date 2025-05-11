@@ -1,17 +1,17 @@
-package com.example.cameralong
+package com.example.cameralong.util
 
 import androidx.exifinterface.media.ExifInterface
+import android.util.Log
 import java.io.File
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
- * Utility class for EXIF data extraction
+ * Utility class for EXIF data operations
  */
 object ExifUtils {
+    private const val TAG = "ExifUtils"
 
     /**
      * Extracts orientation angles (yaw, pitch, roll) from EXIF data
@@ -22,7 +22,7 @@ object ExifUtils {
         val userComment = exif.getAttribute(ExifInterface.TAG_USER_COMMENT)
 
         if (userComment == null) {
-            android.util.Log.w("ExifUtils", "No EXIF UserComment found, using default values")
+            Log.w(TAG, "No EXIF UserComment found, using default values")
             return Triple(0.0, 0.0, 0.0)
         }
 
@@ -30,7 +30,7 @@ object ExifUtils {
         val matchResult = regex.find(userComment)
 
         if (matchResult == null) {
-            android.util.Log.w("ExifUtils", "Cannot parse yaw/pitch/roll from '$userComment', using default values")
+            Log.w(TAG, "Cannot parse yaw/pitch/roll from '$userComment', using default values")
             return Triple(0.0, 0.0, 0.0)
         }
 
@@ -53,7 +53,7 @@ object ExifUtils {
             ?: exif.getAttribute(ExifInterface.TAG_DATETIME)
 
         if (dtString == null) {
-            android.util.Log.w("ExifUtils", "No EXIF date/time found, using current time")
+            Log.w(TAG, "No EXIF date/time found, using current time")
             // Use current time as fallback
             return java.time.OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         }
@@ -65,7 +65,7 @@ object ExifUtils {
             val odt = ldt.atZone(ZoneId.systemDefault()).toOffsetDateTime()
             return odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         } catch (e: Exception) {
-            android.util.Log.w("ExifUtils", "Error parsing EXIF date/time: ${e.message}, using current time")
+            Log.w(TAG, "Error parsing EXIF date/time: ${e.message}, using current time")
             return java.time.OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         }
     }
@@ -81,5 +81,49 @@ object ExifUtils {
         }
         android.graphics.BitmapFactory.decodeFile(imageFile.absolutePath, options)
         return Pair(options.outWidth, options.outHeight)
+    }
+
+    /**
+     * Saves EXIF data to an image file
+     * @param filePath The path to the image file
+     * @param angles The orientation angles string
+     * @param location The location string
+     */
+    fun saveExifData(filePath: String, angles: String, location: String) {
+        try {
+            val exif = ExifInterface(filePath)
+
+            // Save orientation angles to EXIF data
+            if (angles != "unknown") {
+                exif.setAttribute(ExifInterface.TAG_USER_COMMENT, angles)
+                Log.i(TAG, "Saved angles to EXIF: $angles")
+            }
+
+            // Save location data to EXIF
+            if (location != "unknown") {
+                try {
+                    // Parse latitude and longitude from the location string (format: "latitude, longitude")
+                    val parts = location.split(",")
+                    if (parts.size == 2) {
+                        val latitude = parts[0].trim().toDouble()
+                        val longitude = parts[1].trim().toDouble()
+
+                        // Set latitude and longitude in EXIF
+                        exif.setLatLong(latitude, longitude)
+                        Log.i(TAG, "Saved location to EXIF: $latitude, $longitude")
+                    } else {
+                        Log.e(TAG, "Invalid location format: $location")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to parse location: ${e.message}")
+                }
+            }
+
+            // Save all EXIF changes
+            exif.saveAttributes()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save EXIF data: ${e.message}")
+            throw e
+        }
     }
 }

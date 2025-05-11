@@ -1,11 +1,12 @@
-package com.example.cameralong
+package com.example.cameralong.location
 
 import android.content.Context
 import android.hardware.*
+import android.util.Log
 import kotlin.math.roundToInt
 
 class SensorHandler(private val context: Context) : SensorEventListener {
-
+    private val TAG = "SensorHandler"
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
 
