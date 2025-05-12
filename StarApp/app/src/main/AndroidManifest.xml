@@ -13,9 +13,9 @@
     <application
         android:name="com.starapp.navigation.App"
         android:allowBackup="true"
-        android:label="CameraLong"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="AstroNav"
+        android:icon="@mipmap/icon2"
+        android:roundIcon="@mipmap/icon2_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CameraLong">
 
