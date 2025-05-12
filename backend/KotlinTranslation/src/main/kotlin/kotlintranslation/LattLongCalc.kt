@@ -126,12 +126,12 @@ object LattLongCalc {
 
 
     fun meanLatitude(cluster: StarCluster, hemisphere: String = "North"): kotlin.Pair<Double,Double> {
-        val cnt = (cluster.stars.size * 0.75).toInt()
+        val cnt = (cluster.stars.size * 0.8).toInt()
         var ans = mutableListOf<Pair<Double, Double>>()
         var otherStars = cluster.stars.toMutableList()
         val anchor = cluster.stars[0]
         for (star in cluster.stars) {
-            if (abs(star.xCoord!!) < 1e-6 && abs(star.yCoord!!) < 1e-6){
+            if (abs(star.xMeasuredCoord) < 1e-3 && abs(star.yMeasuredCoord) < 1e-3){
                 val anchor = star
                 otherStars.remove(star)
                 break
