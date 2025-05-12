@@ -3,6 +3,7 @@ package com.starapp.navigation.astro
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
 import android.widget.TextView
 import com.starapp.navigation.file.FileManager
 import com.starapp.navigation.ui.ResultActivity
@@ -15,6 +16,11 @@ import kotlin.concurrent.thread
 class AstrometryManager {
     companion object {
         private const val TAG = "AstrometryManager"
+
+        // Keep track of current process and handler for cleanup
+        private var currentProcess: Process? = null
+        private var currentHandler: Handler? = null
+        private var currentProgressUpdater: Runnable? = null
 
         /**
          * Runs the astrometry solver on an image file
@@ -63,6 +69,10 @@ class AstrometryManager {
                 }
             }
 
+            // Store references for cleanup
+            currentHandler = handler
+            currentProgressUpdater = progressUpdater
+
             // Function to update status message only (progress is handled by timer)
             fun updateStage(newStage: String, statusMessage: String) {
                 statusText.text = statusMessage
@@ -101,6 +111,9 @@ class AstrometryManager {
                 pb.directory(File("$astroPath/output"))
                 pb.environment().putAll(mapOf("LD_LIBRARY_PATH" to "$astroPath/lib"))
                 val process = pb.start()
+
+                // Store process for cleanup
+                currentProcess = process
 
                 val stdout = File(astroPath, "solve-out.log")
                 val stderr = File(astroPath, "solve-err.log")
@@ -220,6 +233,42 @@ class AstrometryManager {
             intent.putExtra("imagePath", imageFile.absolutePath)
             intent.putExtra("currentLocation", currentLocation)
             context.startActivity(intent)
+        }
+
+        /**
+         * Cancels any running solver process and cleans up resources
+         * Call this method when navigating back or when the activity is destroyed
+         * @param progressBar The progress bar to reset (optional)
+         * @param statusText The status text to reset (optional)
+         */
+        fun cancelSolver(progressBar: android.widget.ProgressBar? = null, statusText: TextView? = null) {
+            // Cancel handler callbacks
+            currentProgressUpdater?.let { updater ->
+                currentHandler?.removeCallbacks(updater)
+            }
+
+            // Destroy the process if it's running
+            currentProcess?.let { process ->
+                if (process.isAlive) {
+                    process.destroy()
+                }
+            }
+
+            // Reset UI elements if provided
+            progressBar?.let {
+                it.progress = 0
+                it.visibility = android.view.View.INVISIBLE
+            }
+
+            statusText?.let {
+                it.text = ""
+                it.visibility = android.view.View.INVISIBLE
+            }
+
+            // Clear references
+            currentProcess = null
+            currentHandler = null
+            currentProgressUpdater = null
         }
     }
 }

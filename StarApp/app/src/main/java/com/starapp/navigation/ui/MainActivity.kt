@@ -215,13 +215,14 @@ class MainActivity : AppCompatActivity() {
             statusText = statusText,
             currentLocation = currentLocation,
             sensorHandler = sensorHandler
-        ) { file ->
+        ) { file, capturedAngles ->
             // Navigate to CropActivity instead of running solver directly
+            // Use the angles captured at the moment the photo was taken
             NavigationManager().navigateToCropActivity(
                 activity = this,
                 imagePath = file.absolutePath,
                 currentLocation = currentLocation,
-                currentAngles = sensorHandler.getLatestAngles(),
+                currentAngles = capturedAngles,
                 astrometryTimeSeconds = astrometryTimeSeconds
             )
         }

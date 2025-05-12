@@ -103,7 +103,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="0s"
+                android:text="0%"
                 android:textSize="12sp"
                 android:gravity="start"/>
 
@@ -111,7 +111,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="20s"
+                android:text="20%"
                 android:textSize="12sp"
                 android:gravity="center"/>
 
@@ -119,7 +119,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="40s"
+                android:text="40%"
                 android:textSize="12sp"
                 android:gravity="center"/>
 
@@ -127,7 +127,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="60s"
+                android:text="60%"
                 android:textSize="12sp"
                 android:gravity="center"/>
 
@@ -135,7 +135,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="80s"
+                android:text="80%"
                 android:textSize="12sp"
                 android:gravity="center"/>
 
@@ -143,7 +143,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="100s"
+                android:text="100%"
                 android:textSize="12sp"
                 android:gravity="center"/>
 
@@ -151,7 +151,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="120s"
+                android:text="146%s"
                 android:textSize="12sp"
                 android:gravity="end"/>
     </LinearLayout>

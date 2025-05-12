@@ -27,7 +27,7 @@ class CropActivity : AppCompatActivity() {
     private lateinit var cancelButton: Button
     private lateinit var confirmButton: Button
     private lateinit var statusText: TextView
-    private lateinit var exposureTimeText: TextView
+    private lateinit var anglesText: TextView
     private lateinit var progressBar: android.widget.ProgressBar
 
     private var imagePath: String? = null
@@ -48,6 +48,8 @@ class CropActivity : AppCompatActivity() {
         // Initialize gesture manager for swipe navigation
         gestureManager = GestureManager(this)
         gestureManager.initializeGestureDetector {
+            // Cancel any running solver process before navigating back
+            com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
             navigationManager.navigateBack(this)
         }
 
@@ -57,7 +59,7 @@ class CropActivity : AppCompatActivity() {
         cancelButton = findViewById(R.id.cancelCropButton)
         confirmButton = findViewById(R.id.confirmCropButton)
         statusText = findViewById(R.id.cropStatusText)
-        exposureTimeText = findViewById(R.id.exposureTimeText)
+        anglesText = findViewById(R.id.exposureTimeText)
         progressBar = findViewById(R.id.cropProgressBar)
 
         // Make progress bar and status text visible immediately
@@ -97,15 +99,8 @@ class CropActivity : AppCompatActivity() {
             cropOverlay.imageWidth = bitmap.width
             cropOverlay.imageHeight = bitmap.height
 
-            // Extract and display exposure time
-            try {
-                val exif = ExifInterface(path)
-                val exposureTime = ExifUtils.extractExposureTime(exif)
-                exposureTimeText.text = "Exposure: $exposureTime"
-            } catch (e: Exception) {
-                exposureTimeText.text = "Exposure: Unknown"
-                e.printStackTrace()
-            }
+            // Display angles captured at the moment the photo was taken
+            anglesText.text = "Angles at capture: $currentAngles"
         }
     }
 
@@ -166,5 +161,17 @@ class CropActivity : AppCompatActivity() {
         } else {
             super.onTouchEvent(event)
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Cancel any running solver process when the activity is paused
+        com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Cancel any running solver process when the activity is destroyed
+        com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
     }
 }

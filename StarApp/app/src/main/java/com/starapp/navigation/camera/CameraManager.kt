@@ -119,6 +119,12 @@ class CameraManager {
 
         /**
          * Takes a photo using the image capture use case
+         * 
+         * IMPORTANT: This method captures the device orientation angles at the exact moment
+         * the photo is taken (before calling takePicture), not when the photo is saved.
+         * This ensures that the angles stored in EXIF data accurately reflect the device's
+         * orientation at the moment of capture, which is critical for astronomical calculations.
+         * 
          * @param context The application context
          * @param imageCapture The image capture use case
          * @param outputFile The output file to save the photo to
@@ -134,13 +140,17 @@ class CameraManager {
             statusText: TextView,
             currentLocation: String,
             sensorHandler: com.starapp.navigation.location.SensorHandler,
-            onPhotoSaved: (File) -> Unit
+            onPhotoSaved: (File, String) -> Unit
         ) {
             val capture = imageCapture ?: return
             val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile).build()
 
             // Log the current location status
             Log.d(TAG, "Taking photo with location: $currentLocation")
+
+            // Get angles at the exact moment the photo is taken, before calling takePicture
+            val captureAngles = sensorHandler.getLatestAngles()
+            Log.d(TAG, "Captured angles at moment of taking photo: $captureAngles")
 
             capture.takePicture(
                 outputOptions,
@@ -150,20 +160,20 @@ class CameraManager {
                         statusText.text = "📸 Photo saved. Starting solver..."
 
                         try {
-                            // Get angles at the exact moment the photo is saved
-                            val currentAngles = sensorHandler.getLatestAngles()
+                            // Use the angles captured at the moment of taking the photo
+                            // instead of getting them when the photo is saved
 
                             // Save EXIF data
                             ExifUtils.saveExifData(
                                 outputFile.absolutePath,
-                                currentAngles,
+                                captureAngles,
                                 currentLocation
                             )
 
-                            onPhotoSaved(outputFile)
+                            onPhotoSaved(outputFile, captureAngles)
                         } catch (e: Exception) {
                             Log.e(TAG, "Failed to save EXIF data: ${e.message}")
-                            onPhotoSaved(outputFile)
+                            onPhotoSaved(outputFile, captureAngles)
                         }
                     }
 
