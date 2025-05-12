@@ -91,7 +91,7 @@ object LattLongCalc {
                     .start(doubleArrayOf(sGuess, phiGuess))
                     .model(model)
                     .target(DoubleArray(stars.size){0.0})
-                    .maxEvaluations(1000).maxIterations(1000)
+                    .maxEvaluations(500).maxIterations(500)
                     .checker(checker)
                     .build()
 
@@ -109,7 +109,7 @@ object LattLongCalc {
 
                     val errs = opt.residuals.toArray().map{ abs(it) }
                     val maxE = errs.maxOrNull() ?: continue
-                    val az0SOLUTION = sSol / AZ_SCALE
+                    val az0SOLUTION = norm(sSol / AZ_SCALE, 0.0, 2*PI)
 
                     if (maxE < bestErr) {
                         bestErr = maxE
@@ -126,7 +126,22 @@ object LattLongCalc {
 
 
     fun meanLatitude(cluster: StarCluster, hemisphere: String = "North"): kotlin.Pair<Double,Double> {
-        return solveLatitudeAndAzimuth(cluster.stars, hemisphere)
+        val cnt = (cluster.stars.size * 0.75).toInt()
+        var ans = mutableListOf<Pair<Double, Double>>()
+        var otherStars = cluster.stars.toMutableList()
+        val anchor = cluster.stars[0]
+        for (star in cluster.stars) {
+            if (abs(star.xCoord!!) < 1e-6 && abs(star.yCoord!!) < 1e-6){
+                val anchor = star
+                otherStars.remove(star)
+                break
+            }
+        }
+        for (k in 1..50){
+            val currentStars = listOf<Star>(anchor)+otherStars.shuffled().take(cnt)
+            ans.add(solveLatitudeAndAzimuth(currentStars, hemisphere))
+        }
+        return ans.map{it.first}.average() to ans.map{it.second}.average()
     }
 
     private fun timeEq(days: Double, year: Int): Double {
