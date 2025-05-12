@@ -3,6 +3,8 @@ package com.starapp.navigation.ui
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -30,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     // UI components
     private lateinit var previewView: PreviewView
     private lateinit var exposureSlider: Slider
+    private lateinit var exposureTimeLabel: TextView
     private lateinit var astrometryTimeSlider: Slider
     private lateinit var astrometryTimeLabel: TextView
     private lateinit var statusText: TextView
@@ -56,6 +59,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageSelectionManager: ImageSelectionManager
     private lateinit var intentManager: IntentManager
     private lateinit var uiManager: UIManager
+
+    // Debounce for exposure slider
+    private val exposureHandler = Handler(Looper.getMainLooper())
+    private var exposureRunnable: Runnable? = null
 
     // Constants
     private val PICK_IMAGE_REQUEST_CODE = 42
@@ -93,6 +100,7 @@ class MainActivity : AppCompatActivity() {
     private fun initializeUIComponents() {
         previewView = findViewById(R.id.previewView)
         exposureSlider = findViewById(R.id.exposureSlider)
+        exposureTimeLabel = findViewById(R.id.exposureTimeLabel)
         astrometryTimeSlider = findViewById(R.id.astrometryTimeSlider)
         astrometryTimeLabel = findViewById(R.id.astrometryTimeLabel)
         statusText = findViewById(R.id.statusText)
@@ -100,13 +108,23 @@ class MainActivity : AppCompatActivity() {
         captureButton = findViewById(R.id.captureButton)
         chooseButton = findViewById(R.id.chooseButton)
 
+        // Initialize exposureTimeNs from slider's initial value and update label
+        exposureTimeNs = exposureSlider.value.toLong()
+        updateExposureTimeLabel()
+
         // Initialize astrometryTimeSeconds from slider's initial value
         astrometryTimeSeconds = astrometryTimeSlider.value.toInt()
         astrometryTimeLabel.text = "Astrometry time: ${astrometryTimeSeconds}s"
 
         cameraExecutor = Executors.newSingleThreadExecutor()
-        progressBar.max = 6
+        progressBar.max = 100
         progressBar.progress = 0
+    }
+
+    private fun updateExposureTimeLabel() {
+        // Convert nanoseconds to milliseconds for display
+        val exposureTimeMs = exposureTimeNs / 1_000_000
+        exposureTimeLabel.text = "Exposure time: $exposureTimeMs ms"
     }
 
     private fun initializeManagers() {
@@ -134,9 +152,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupExposureSlider() {
-        exposureSlider.addOnChangeListener { _, value, _ ->
+        exposureSlider.addOnChangeListener { _, value, fromUser ->
             exposureTimeNs = value.toLong()
-            restartCameraWithExposure()
+            updateExposureTimeLabel()
+
+            // Only debounce if the change is from user interaction
+            if (fromUser) {
+                // Remove any pending runnables
+                exposureRunnable?.let { exposureHandler.removeCallbacks(it) }
+
+                // Create a new runnable for camera restart
+                exposureRunnable = Runnable {
+                    restartCameraWithExposure()
+                }.also {
+                    // Schedule the runnable after a delay (300ms)
+                    exposureHandler.postDelayed(it, 300)
+                }
+            } else {
+                // If programmatic change, restart immediately
+                restartCameraWithExposure()
+            }
         }
 
         // Setup astrometry time slider
@@ -179,14 +214,15 @@ class MainActivity : AppCompatActivity() {
             outputFile = photoFile,
             statusText = statusText,
             currentLocation = currentLocation,
-            currentAngles = currentAngles
+            sensorHandler = sensorHandler
         ) { file ->
             // Navigate to CropActivity instead of running solver directly
             NavigationManager().navigateToCropActivity(
                 activity = this,
                 imagePath = file.absolutePath,
                 currentLocation = currentLocation,
-                currentAngles = currentAngles
+                currentAngles = sensorHandler.getLatestAngles(),
+                astrometryTimeSeconds = astrometryTimeSeconds
             )
         }
     }
@@ -241,6 +277,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Remove any pending exposure slider callbacks
+        exposureRunnable?.let { exposureHandler.removeCallbacks(it) }
         cameraExecutor.shutdown()
     }
 }

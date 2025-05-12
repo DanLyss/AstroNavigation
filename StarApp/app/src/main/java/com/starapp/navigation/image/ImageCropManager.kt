@@ -136,17 +136,22 @@ class ImageCropManager(private val context: Context) {
      * Processes the image with the astrometry solver
      * @param imagePath Path to the image to process
      * @param statusText TextView to update with status messages
+     * @param progressBar ProgressBar to show solver progress
      * @param currentLocation Current location string
      * @param currentAngles Current angles string
+     * @param astrometryTimeSeconds Maximum astrometry processing time in seconds
      */
     fun processImageWithAstrometry(
         imagePath: String,
         statusText: TextView,
+        progressBar: android.widget.ProgressBar,
         currentLocation: String,
-        currentAngles: String
+        currentAngles: String,
+        astrometryTimeSeconds: Int = 100
     ) {
-        // Make status text visible
+        // Make status text and progress bar visible
         statusText.visibility = View.VISIBLE
+        progressBar.visibility = View.VISIBLE
         statusText.text = "Starting astrometry solver..."
 
         // Run the astrometry solver on the image
@@ -155,8 +160,10 @@ class ImageCropManager(private val context: Context) {
             imageFile = File(imagePath),
             astroPath = File(imagePath).parent ?: "",
             statusText = statusText,
+            progressBar = progressBar,
             currentLocation = currentLocation,
-            currentAngles = currentAngles
+            currentAngles = currentAngles,
+            cpuTimeLimit = astrometryTimeSeconds
         )
     }
 }

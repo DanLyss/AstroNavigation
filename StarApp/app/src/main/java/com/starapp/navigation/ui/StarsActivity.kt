@@ -54,7 +54,7 @@ class StarsActivity : AppCompatActivity() {
         corrPath = params.second
         currentLocation = params.third
 
-        // Configure threshold slider
+        // Configure threshold slider with debouncing (500ms)
         uiManager.configureThresholdSlider(
             slider = thresholdSlider,
             label = thresholdLabel,
@@ -93,4 +93,3 @@ class StarsActivity : AppCompatActivity() {
         )
     }
 }
-

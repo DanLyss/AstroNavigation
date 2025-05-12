@@ -53,7 +53,13 @@ class ResultActivity : AppCompatActivity() {
         if (imagePath != null) {
             // Load and show the image
             val bitmap = resultManager.loadImage(imagePath!!)
-            val points = resultManager.extractStarCoordinates(imagePath!!)
+
+            // Only extract star coordinates if the image was loaded successfully
+            val points = if (bitmap != null) {
+                resultManager.extractStarCoordinates(imagePath!!)
+            } else {
+                emptyList()
+            }
 
             // Configure image view and overlay
             uiManager.configureImageViewAndOverlay(
@@ -98,4 +104,3 @@ class ResultActivity : AppCompatActivity() {
         }
     }
 }
-

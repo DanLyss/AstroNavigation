@@ -62,17 +62,20 @@ class NavigationManager {
      * @param imagePath Path to the image file
      * @param currentLocation Current location string
      * @param currentAngles Current angles string
+     * @param astrometryTimeSeconds Maximum astrometry processing time in seconds
      */
     fun navigateToCropActivity(
         activity: Activity,
         imagePath: String,
         currentLocation: String,
-        currentAngles: String
+        currentAngles: String,
+        astrometryTimeSeconds: Int = 100
     ) {
         Intent(activity, CropActivity::class.java).also { intent ->
             intent.putExtra("imagePath", imagePath)
             intent.putExtra("currentLocation", currentLocation)
             intent.putExtra("currentAngles", currentAngles)
+            intent.putExtra("astrometryTimeSeconds", astrometryTimeSeconds)
             activity.startActivity(intent)
         }
     }
@@ -85,4 +88,3 @@ class NavigationManager {
         activity.finish()
     }
 }
-

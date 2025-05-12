@@ -12,6 +12,9 @@ import com.starapp.navigation.gesture.GestureManager
 import com.starapp.navigation.image.ImageCropManager
 import com.starapp.navigation.intent.IntentManager
 import com.starapp.navigation.navigation.NavigationManager
+import com.starapp.navigation.util.ExifUtils
+import androidx.exifinterface.media.ExifInterface
+import java.io.File
 
 class CropActivity : AppCompatActivity() {
     private lateinit var gestureManager: GestureManager
@@ -24,10 +27,13 @@ class CropActivity : AppCompatActivity() {
     private lateinit var cancelButton: Button
     private lateinit var confirmButton: Button
     private lateinit var statusText: TextView
+    private lateinit var exposureTimeText: TextView
+    private lateinit var progressBar: android.widget.ProgressBar
 
     private var imagePath: String? = null
     private var currentLocation: String = "unknown"
     private var currentAngles: String = "unknown"
+    private var astrometryTimeSeconds: Int = 100
     private var originalBitmap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,12 +57,21 @@ class CropActivity : AppCompatActivity() {
         cancelButton = findViewById(R.id.cancelCropButton)
         confirmButton = findViewById(R.id.confirmCropButton)
         statusText = findViewById(R.id.cropStatusText)
+        exposureTimeText = findViewById(R.id.exposureTimeText)
+        progressBar = findViewById(R.id.cropProgressBar)
+
+        // Make progress bar and status text visible immediately
+        progressBar.visibility = android.view.View.VISIBLE
+        progressBar.progress = 0
+        statusText.visibility = android.view.View.VISIBLE
+        statusText.text = "Ready to process image. Crop or continue."
 
         // Extract parameters from intent
         val params = intentManager.extractCropActivityParams(intent)
         imagePath = params.first
         currentLocation = params.second
         currentAngles = params.third
+        astrometryTimeSeconds = params.fourth
 
         // Load and display the image
         if (imagePath != null) {
@@ -81,6 +96,16 @@ class CropActivity : AppCompatActivity() {
             // Set the image dimensions in the overlay view
             cropOverlay.imageWidth = bitmap.width
             cropOverlay.imageHeight = bitmap.height
+
+            // Extract and display exposure time
+            try {
+                val exif = ExifInterface(path)
+                val exposureTime = ExifUtils.extractExposureTime(exif)
+                exposureTimeText.text = "Exposure: $exposureTime"
+            } catch (e: Exception) {
+                exposureTimeText.text = "Exposure: Unknown"
+                e.printStackTrace()
+            }
         }
     }
 
@@ -124,12 +149,14 @@ class CropActivity : AppCompatActivity() {
         imageCropManager.processImageWithAstrometry(
             imagePath = path,
             statusText = statusText,
+            progressBar = progressBar,
             currentLocation = currentLocation,
-            currentAngles = currentAngles
+            currentAngles = currentAngles,
+            astrometryTimeSeconds = astrometryTimeSeconds
         )
 
-        // Finish this activity
-        finish()
+        // Don't finish the activity - let the solver run and show progress
+        // The AstrometryManager will navigate to the next activity when done
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -141,4 +168,3 @@ class CropActivity : AppCompatActivity() {
         }
     }
 }
-

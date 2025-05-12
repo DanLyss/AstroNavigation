@@ -11,14 +11,20 @@ class IntentManager {
     /**
      * Extract parameters from CropActivity intent
      * @param intent The intent to extract parameters from
-     * @return Triple of imagePath, currentLocation, and currentAngles
+     * @return Quadruple of imagePath, currentLocation, currentAngles, and astrometryTimeSeconds
      */
-    fun extractCropActivityParams(intent: Intent): Triple<String?, String, String> {
+    fun extractCropActivityParams(intent: Intent): Quadruple<String?, String, String, Int> {
         val imagePath = intent.getStringExtra("imagePath")
         val currentLocation = intent.getStringExtra("currentLocation") ?: "unknown"
         val currentAngles = intent.getStringExtra("currentAngles") ?: "unknown"
-        return Triple(imagePath, currentLocation, currentAngles)
+        val astrometryTimeSeconds = intent.getIntExtra("astrometryTimeSeconds", 100)
+        return Quadruple(imagePath, currentLocation, currentAngles, astrometryTimeSeconds)
     }
+
+    /**
+     * Data class to hold four values
+     */
+    data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
     /**
      * Extract parameters from ResultActivity intent

@@ -29,7 +29,7 @@ class SensorHandler(private val context: Context) : SensorEventListener {
         val azimuth = Math.toDegrees(orientationAngles[0].toDouble())
         val pitch = Math.toDegrees(orientationAngles[1].toDouble())
         val roll = Math.toDegrees(orientationAngles[2].toDouble())
-        return "Azimuth: $azimuth°, Pitch: $pitch°, Roll: $roll°"
+        return "yaw=$azimuth, pitch=$pitch, roll=$roll"
     }
 
     override fun onSensorChanged(event: SensorEvent?) {

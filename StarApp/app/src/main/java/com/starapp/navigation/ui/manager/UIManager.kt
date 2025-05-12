@@ -73,7 +73,7 @@ class UIManager(private val context: Context) {
      * @param slider The slider to configure
      * @param label The label to update
      * @param initialValue The initial value for the slider
-     * @param onValueChanged Callback to be executed when the slider value changes
+     * @param onValueChanged Callback to be executed when the slider value changes and stops for 500ms
      */
     fun configureThresholdSlider(
         slider: Slider,
@@ -86,12 +86,30 @@ class UIManager(private val context: Context) {
         slider.value = initialValue.toFloat()
         updateThresholdLabel(label, initialValue)
 
+        // For debouncing slider changes
+        var debounceJob: java.util.Timer? = null
+        val debounceDelay = 500L // 500ms delay
+
         // Set up slider listener
         slider.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 val newValue = value.toDouble()
                 updateThresholdLabel(label, newValue)
-                onValueChanged(newValue)
+
+                // Cancel previous timer if it exists
+                debounceJob?.cancel()
+
+                // Create new timer for debouncing
+                debounceJob = java.util.Timer().apply {
+                    schedule(object : java.util.TimerTask() {
+                        override fun run() {
+                            // Execute on UI thread since this might be called from a background thread
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                onValueChanged(newValue)
+                            }
+                        }
+                    }, debounceDelay)
+                }
             }
         }
     }

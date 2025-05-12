@@ -29,7 +29,7 @@ class CameraManager {
 
     companion object {
         private const val TAG = "CameraManager"
-        
+
         /**
          * Restarts the camera with the specified exposure time
          * @param activity The activity context
@@ -124,7 +124,7 @@ class CameraManager {
          * @param outputFile The output file to save the photo to
          * @param statusText The text view to update with status messages
          * @param currentLocation The current location string
-         * @param currentAngles The current orientation angles string
+         * @param sensorHandler The sensor handler to get the latest angles at the moment of capture
          * @param onPhotoSaved Callback function to be called when the photo is saved
          */
         fun takePhoto(
@@ -133,7 +133,7 @@ class CameraManager {
             outputFile: File,
             statusText: TextView,
             currentLocation: String,
-            currentAngles: String = "unknown",
+            sensorHandler: com.starapp.navigation.location.SensorHandler,
             onPhotoSaved: (File) -> Unit
         ) {
             val capture = imageCapture ?: return
@@ -150,13 +150,16 @@ class CameraManager {
                         statusText.text = "📸 Photo saved. Starting solver..."
 
                         try {
+                            // Get angles at the exact moment the photo is saved
+                            val currentAngles = sensorHandler.getLatestAngles()
+
                             // Save EXIF data
                             ExifUtils.saveExifData(
                                 outputFile.absolutePath,
                                 currentAngles,
                                 currentLocation
                             )
-                            
+
                             onPhotoSaved(outputFile)
                         } catch (e: Exception) {
                             Log.e(TAG, "Failed to save EXIF data: ${e.message}")

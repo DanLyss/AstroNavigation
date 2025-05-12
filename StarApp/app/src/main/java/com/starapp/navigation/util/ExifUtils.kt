@@ -84,6 +84,35 @@ object ExifUtils {
     }
 
     /**
+     * Extracts exposure time from EXIF data
+     * @param exif The ExifInterface object
+     * @return Exposure time as a string (e.g., "1/60 sec") or "Unknown" if not available
+     */
+    fun extractExposureTime(exif: ExifInterface): String {
+        val exposureTime = exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME)
+
+        if (exposureTime == null) {
+            Log.w(TAG, "No EXIF exposure time found")
+            return "Unknown"
+        }
+
+        try {
+            // Exposure time is stored as a rational value (e.g., "1/60")
+            val exposureValue = exposureTime.toDouble()
+
+            // Format based on value
+            return when {
+                exposureValue >= 1.0 -> "${exposureValue.toInt()} sec"
+                exposureValue >= 0.1 -> "${(exposureValue * 10).toInt()/10.0} sec"
+                else -> "1/${(1.0 / exposureValue).toInt()} sec"
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error parsing EXIF exposure time: ${e.message}")
+            return exposureTime // Return raw value if parsing fails
+        }
+    }
+
+    /**
      * Saves EXIF data to an image file
      * @param filePath The path to the image file
      * @param angles The orientation angles string
