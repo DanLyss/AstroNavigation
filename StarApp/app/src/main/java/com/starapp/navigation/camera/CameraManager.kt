@@ -150,6 +150,7 @@ class CameraManager {
 
 
 
+
             capture.takePicture(
                 outputOptions,
                 ContextCompat.getMainExecutor(context),
@@ -157,10 +158,8 @@ class CameraManager {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
 
                         val captureAngles = sensorHandler.getLatestAngles()
-
-                        statusText.text = "📸 Photo saved. Starting solver..."
                         Log.d(TAG, "Captured angles at moment of taking photo: $captureAngles")
-
+                        statusText.text = "📸 Photo saved. Starting solver..."
                         try {
 
                             // Use the angles captured at the moment of taking the photo
