@@ -275,6 +275,10 @@ class MainActivity : AppCompatActivity() {
         locationHandler.stopListening()
         sensorHandler.stopListening()
     }
+    override fun onResume() {
+        super.onResume()
+        sensorHandler.startListening()
+    }
 
     override fun onDestroy() {
         super.onDestroy()

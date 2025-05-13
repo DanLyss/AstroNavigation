@@ -148,18 +148,21 @@ class CameraManager {
             // Log the current location status
             Log.d(TAG, "Taking photo with location: $currentLocation")
 
-            // Get angles at the exact moment the photo is taken, before calling takePicture
-            val captureAngles = sensorHandler.getLatestAngles()
-            Log.d(TAG, "Captured angles at moment of taking photo: $captureAngles")
+
 
             capture.takePicture(
                 outputOptions,
                 ContextCompat.getMainExecutor(context),
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+
+                        val captureAngles = sensorHandler.getLatestAngles()
+
                         statusText.text = "📸 Photo saved. Starting solver..."
+                        Log.d(TAG, "Captured angles at moment of taking photo: $captureAngles")
 
                         try {
+
                             // Use the angles captured at the moment of taking the photo
                             // instead of getting them when the photo is saved
 
