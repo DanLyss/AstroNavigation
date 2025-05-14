@@ -21,6 +21,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.starapp.navigation.util.ExifUtils
 import java.io.File
+import java.util.Date
 
 /**
  * Manager class for camera-related operations
@@ -169,7 +170,8 @@ class CameraManager {
                             ExifUtils.saveExifData(
                                 outputFile.absolutePath,
                                 captureAngles,
-                                currentLocation
+                                currentLocation,
+                                Date()
                             )
 
                             onPhotoSaved(outputFile, captureAngles)

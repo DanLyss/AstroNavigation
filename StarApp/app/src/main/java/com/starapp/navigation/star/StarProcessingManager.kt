@@ -50,7 +50,7 @@ class StarProcessingManager(private val context: Context) {
         val isoTime = ExifUtils.extractDateTime(exif)
 
         // Ensure threshold is not greater than 1.0 to prevent crashes
-        val safeThreshold = minOf(matchWeightThreshold, 1.0)
+        val safeThreshold = minOf(matchWeightThreshold, 0.999)
 
         try {
             // Process stars with safe threshold

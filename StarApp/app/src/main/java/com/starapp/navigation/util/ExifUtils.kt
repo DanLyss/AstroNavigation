@@ -2,6 +2,8 @@ package com.starapp.navigation.util
 
 import androidx.exifinterface.media.ExifInterface
 import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.*
 import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -84,47 +86,51 @@ object ExifUtils {
     }
 
 
-    /**
-     * Saves EXIF data to an image file
-     * @param filePath The path to the image file
-     * @param angles The orientation angles string
-     * @param location The location string
-     */
-    fun saveExifData(filePath: String, angles: String, location: String) {
-        try {
-            val exif = ExifInterface(filePath)
+    fun saveExifData(
+        filePath: String,
+        angles: String,
+        locationString: String,
+        date: Date
+    ) {
+        val exif = ExifInterface(filePath)
 
-            // Save orientation angles to EXIF data
-            if (angles != "unknown") {
-                exif.setAttribute(ExifInterface.TAG_USER_COMMENT, angles)
-                Log.i(TAG, "Saved angles to EXIF: $angles")
-            }
-
-            // Save location data to EXIF
-            if (location != "unknown") {
-                try {
-                    // Parse latitude and longitude from the location string (format: "latitude, longitude")
-                    val parts = location.split(",")
-                    if (parts.size == 2) {
-                        val latitude = parts[0].trim().toDouble()
-                        val longitude = parts[1].trim().toDouble()
-
-                        // Set latitude and longitude in EXIF
-                        exif.setLatLong(latitude, longitude)
-                        Log.i(TAG, "Saved location to EXIF: $latitude, $longitude")
-                    } else {
-                        Log.e(TAG, "Invalid location format: $location")
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to parse location: ${e.message}")
-                }
-            }
-
-            // Save all EXIF changes
-            exif.saveAttributes()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to save EXIF data: ${e.message}")
-            throw e
+        if (angles != "unknown") {
+            exif.setAttribute(ExifInterface.TAG_USER_COMMENT, angles)
+            Log.i(TAG, "Saved angles to EXIF: $angles")
         }
+
+        Log.i(TAG, locationString)
+        val parts = locationString.split("\\s*,\\s*".toRegex())
+        if (parts.size == 2) {
+            try {
+                val lat = parts[0].toDouble()
+                val lon = parts[1].toDouble()
+
+                exif.setLatLong(lat, lon)
+
+
+                val dateFmt = SimpleDateFormat("yyyy:MM:dd", Locale.US)
+                exif.setAttribute(
+                    ExifInterface.TAG_GPS_DATESTAMP,
+                    dateFmt.format(date)
+                )
+
+                val timeFmt = SimpleDateFormat("HH:mm:ss", Locale.US)
+                exif.setAttribute(
+                    ExifInterface.TAG_GPS_TIMESTAMP,
+                    timeFmt.format(date)
+                )
+
+                Log.i(TAG, "Saved manual GPS to EXIF: $lat, $lon")
+            } catch (e: NumberFormatException) {
+                Log.e(TAG, "Invalid number in locationString=‘$locationString’", e)
+            }
+        } else {
+            Log.e(TAG, "Invalid location format (expected ‘lat, lon’): $locationString")
+        }
+
+        exif.saveAttributes()
+
+
     }
 }

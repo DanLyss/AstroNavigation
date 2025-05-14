@@ -142,6 +142,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeLocationAndSensors() {
         locationHandler = LocationHandler(this)
+
         locationHandler.startListening { location ->
             currentLocation = "${location.latitude}, ${location.longitude}"
         }
@@ -192,6 +193,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupButtons() {
         // Set up capture button
         captureButton.setOnClickListener {
+            if (currentLocation == "unknown")
             currentAngles = sensorHandler.getLatestAngles()
             takePhoto()
         }
