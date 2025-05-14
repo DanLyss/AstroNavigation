@@ -32,7 +32,6 @@ class LocationHandler(private val context: Context) {
                 Log.d("LocationHandler", "📍 Fused location: ${location.latitude}, ${location.longitude}, acc=$accuracy, age=${age}ms")
 
                 if (accuracy <= 50f && age <= 30_000) {
-                    Toast.makeText(context, "✅ GPS fix: ${location.latitude}, ${location.longitude}", Toast.LENGTH_SHORT).show()
                     onLocationChanged(location)
                 } else {
                     Log.d("LocationHandler", "❌ Ignored fused location: too inaccurate or old")

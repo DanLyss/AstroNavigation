@@ -19,6 +19,7 @@ import com.starapp.navigation.image.ImageSelectionManager
 import com.starapp.navigation.intent.IntentManager
 import com.starapp.navigation.location.LocationHandler
 import com.starapp.navigation.location.SensorHandler
+import com.starapp.navigation.main.MainManager
 import com.starapp.navigation.navigation.NavigationManager
 import com.starapp.navigation.permission.PermissionManager
 import com.starapp.navigation.ui.manager.UIManager
@@ -52,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private var currentLocation: String = "unknown"
     private var currentAngles: String = "unknown"
 
+
     // Managers
     private lateinit var locationHandler: LocationHandler
     private lateinit var sensorHandler: SensorHandler
@@ -59,6 +61,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageSelectionManager: ImageSelectionManager
     private lateinit var intentManager: IntentManager
     private lateinit var uiManager: UIManager
+    private lateinit var mainManager: MainManager
+
 
     // Debounce for exposure slider
     private val exposureHandler = Handler(Looper.getMainLooper())
@@ -75,6 +79,9 @@ class MainActivity : AppCompatActivity() {
         // Initialize UI components
         initializeUIComponents()
 
+        // Initialize location and sensor handlers
+        initializeLocationAndSensors()
+
         // Initialize managers
         initializeManagers()
 
@@ -83,9 +90,6 @@ class MainActivity : AppCompatActivity() {
 
         // Clean up old .corr files when MainActivity is created
         FileManager.cleanupCorrFiles(astroPath)
-
-        // Initialize location and sensor handlers
-        initializeLocationAndSensors()
 
         // Set up exposure slider
         setupExposureSlider()
@@ -132,6 +136,7 @@ class MainActivity : AppCompatActivity() {
         imageSelectionManager = ImageSelectionManager(this)
         intentManager = IntentManager()
         uiManager = UIManager(this)
+        mainManager = MainManager(statusText) { currentLocation }
     }
 
     private fun initializeFileSystem() {
@@ -193,7 +198,6 @@ class MainActivity : AppCompatActivity() {
     private fun setupButtons() {
         // Set up capture button
         captureButton.setOnClickListener {
-            if (currentLocation == "unknown")
             currentAngles = sensorHandler.getLatestAngles()
             takePhoto()
         }
@@ -252,7 +256,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (permissionManager.handlePermissionResult(requestCode, grantResults)) {
             restartCameraWithExposure()
@@ -276,10 +284,13 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         locationHandler.stopListening()
         sensorHandler.stopListening()
+        mainManager.stop()
     }
+
     override fun onResume() {
         super.onResume()
         sensorHandler.startListening()
+        mainManager.start()
     }
 
     override fun onDestroy() {

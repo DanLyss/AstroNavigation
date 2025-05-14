@@ -11,6 +11,7 @@ import com.starapp.navigation.astro.AstrometryManager
 import com.starapp.navigation.util.ExifUtils
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Date
 
 /**
  * Manager class for handling image cropping and processing operations
@@ -114,7 +115,7 @@ class ImageCropManager(private val context: Context) {
 
             // Alternatively, we can use ExifUtils to save the data directly
             if (currentAngles != "unknown") {
-                ExifUtils.saveExifData(croppedImagePath, currentAngles, currentLocation)
+                ExifUtils.saveExifData(croppedImagePath, currentAngles, currentLocation, Date())
             }
         } catch (e: Exception) {
             e.printStackTrace()
