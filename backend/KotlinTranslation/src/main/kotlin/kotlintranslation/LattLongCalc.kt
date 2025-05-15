@@ -231,6 +231,18 @@ object LattLongCalc {
                 Math.toRadians(norm((lt - hour) * 15, -180.0, 180.0))
             }
         }
-        return longs.average()
+        if (longs.size < 4) return longs.average()
+
+        val sorted = longs.sorted()
+        val q1Index = (sorted.size * 0.25).toInt()
+        val q3Index = (sorted.size * 0.75).toInt()
+        val q1 = sorted[q1Index]
+        val q3 = sorted[q3Index]
+        val iqr = q3 - q1
+        val lowerFence = q1 - 1.5 * iqr
+        val upperFence = q3 + 1.5 * iqr
+        val filtered = sorted.filter { it in lowerFence..upperFence }
+
+        return if (filtered.isEmpty()) longs.average() else filtered.average()
     }
 }
