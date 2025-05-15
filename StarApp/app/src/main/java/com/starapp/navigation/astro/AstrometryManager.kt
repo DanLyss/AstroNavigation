@@ -4,11 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Handler
+import android.os.Looper
 import android.widget.TextView
+import android.widget.ProgressBar
 import com.starapp.navigation.file.FileManager
 import com.starapp.navigation.ui.ResultActivity
 import java.io.File
-import kotlin.concurrent.thread
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Manager class for astrometry-related operations
@@ -17,258 +21,227 @@ class AstrometryManager {
     companion object {
         private const val TAG = "AstrometryManager"
 
-        // Keep track of current process and handler for cleanup
+        // Track current solver process and handler for cleanup
         private var currentProcess: Process? = null
         private var currentHandler: Handler? = null
         private var currentProgressUpdater: Runnable? = null
 
+        // Shared thread pool for all astrometry operations
+        private val executor: ExecutorService = Executors.newFixedThreadPool(3)
+
+        // Ensure executor is shutdown when app is closed
+        init {
+            Runtime.getRuntime().addShutdownHook(Thread {
+                shutdownExecutor()
+            })
+        }
+
+        private fun shutdownExecutor() {
+            executor.shutdown()
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow()
+                }
+            } catch (e: InterruptedException) {
+                executor.shutdownNow()
+            }
+        }
+
         /**
-         * Runs the astrometry solver on an image file
-         * @param context The application context
-         * @param imageFile The image file to solve
-         * @param astroPath The path to the astrometry files
-         * @param statusText The text view to update with status messages
-         * @param progressBar The progress bar to update during solving
-         * @param currentLocation The current location string
-         * @param currentAngles The current angles string
+         * Runs the astrometry solver on an image file.
+         * Heavy work is moved to a background thread to keep the UI responsive.
          */
         fun runSolver(
             context: Context,
             imageFile: File,
             astroPath: String,
             statusText: TextView,
-            progressBar: android.widget.ProgressBar,
+            progressBar: ProgressBar,
             currentLocation: String,
             currentAngles: String,
             cpuTimeLimit: Int = 100
         ) {
-            // Set up time-based progress bar
-            // Add 20% safety margin to the CPU time limit
+            // Prepare progress bar
             val maxTimeSeconds = (cpuTimeLimit * 1.2).toInt()
             progressBar.max = 100
             progressBar.progress = 0
+            progressBar.visibility = ProgressBar.VISIBLE
 
-            // Start time tracking
+            // Start timer to update progress bar by elapsed time
             val startTime = System.currentTimeMillis()
-
-            // Handler for updating progress based on elapsed time
-            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            val handler = Handler(Looper.getMainLooper())
             val progressUpdater = object : Runnable {
                 override fun run() {
-                    val elapsedTimeMs = System.currentTimeMillis() - startTime
-                    val elapsedTimeSeconds = elapsedTimeMs / 1000
-
-                    // Calculate progress as a percentage of elapsed time relative to max time
-                    val progress = ((elapsedTimeSeconds.toFloat() / maxTimeSeconds) * 100).toInt().coerceIn(0, 100)
-                    progressBar.progress = progress
-
-                    // Continue updating every 100ms until we reach 100% or the process completes
-                    if (progress < 100) {
+                    val elapsedSec = (System.currentTimeMillis() - startTime) / 1000
+                    val percent = ((elapsedSec.toFloat() / maxTimeSeconds) * 100)
+                        .toInt()
+                        .coerceIn(0, 100)
+                    progressBar.progress = percent
+                    if (percent < 100) {
                         handler.postDelayed(this, 100)
                     }
                 }
             }
 
-            // Store references for cleanup
+            // Store for cancellation
             currentHandler = handler
             currentProgressUpdater = progressUpdater
 
-            // Function to update status message only (progress is handled by timer)
-            fun updateStage(newStage: String, statusMessage: String) {
-                statusText.text = statusMessage
-            }
-            try {
-                // Reset progress bar
-                progressBar.progress = 0
-                progressBar.visibility = android.view.View.VISIBLE
+            handler.post(progressUpdater)
 
-                // Start progress updater
-                handler.post(progressUpdater)
+            // Perform all heavy operations in a background thread
+            executor.execute {
+                try {
+                    // Step 1: convert image to FITS
+                    handler.post {
+                        statusText.text = "Converting image to FITS format..."
+                    }
+                    val bitmap = android.provider.MediaStore.Images.Media
+                        .getBitmap(context.contentResolver, Uri.fromFile(imageFile))
+                    val fitsFile = File(astroPath, "input.fits")
+                    FitsManager.convertBitmapToFits(bitmap, fitsFile)
 
-                // Update progress (Step 1: Converting image)
-                updateStage("converting", "Converting image to FITS format...")
+                    // Step 2: start the astrometry solver process
+                    handler.post {
+                        statusText.text = "Starting astrometry solver..."
+                    }
+                    val cmd = listOf(
+                        "sh", "-c",
+                        "LD_LIBRARY_PATH=$astroPath/lib " +
+                                "$astroPath/bin/solve-field " +
+                                "--fits-image ${fitsFile.absolutePath} " +
+                                "--dir $astroPath/output " +
+                                "--temp-dir $astroPath/tmp " +
+                                "-O -L 0.1 -H 180.0 -u dw -z 2 -p -y -9 " +
+                                "--uniformize 0 --cpulimit $cpuTimeLimit " +
+                                "--config $astroPath/bin/my.cfg -v"
+                    )
+                    val pb = ProcessBuilder(*cmd.toTypedArray())
+                        .directory(File("$astroPath/output"))
+                        .apply { environment()["LD_LIBRARY_PATH"] = "$astroPath/lib" }
+                    val process = pb.start()
+                    currentProcess = process
 
-                val bitmap = android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, Uri.fromFile(imageFile))
-                val fitsFile = File(astroPath, "input.fits")
-                FitsManager.convertBitmapToFits(bitmap, fitsFile)
-
-                // Update progress (Step 2: Starting solver)
-                updateStage("starting", "Starting astrometry solver...")
-
-                val cmd = listOf(
-                    "sh", "-c",
-                    "LD_LIBRARY_PATH=$astroPath/lib " +
-                            "$astroPath/bin/solve-field " +
-                            "--fits-image ${fitsFile.absolutePath} " +
-                            "--dir $astroPath/output " +
-                            "--temp-dir $astroPath/tmp " +
-                            "-O -L 0.1 -H 180.0 -u dw -z 2 -p -y -9 " +
-                                "--uniformize 0 --cpulimit $cpuTimeLimit " +  // CPU time limit set by slider
-                            "--config $astroPath/bin/my.cfg -v"
-                )
-
-                val pb = ProcessBuilder(*cmd.toTypedArray())
-                pb.directory(File("$astroPath/output"))
-                pb.environment().putAll(mapOf("LD_LIBRARY_PATH" to "$astroPath/lib"))
-                val process = pb.start()
-
-                // Store process for cleanup
-                currentProcess = process
-
-                val stdout = File(astroPath, "solve-out.log")
-                val stderr = File(astroPath, "solve-err.log")
-
-                // Update progress (Step 3: Processing)
-                updateStage("reading", "Processing image with astrometry solver...")
-
-                // Monitor solver progress
-                thread {
-                    stdout.printWriter().use { out ->
-                        process.inputStream.bufferedReader().forEachLine { line ->
-                            out.println(line)
-
-                            // Update progress based on solver output
-                            android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                if (line.contains("Reading input file")) {
-                                    updateStage("reading", "Reading input file...")
-                                } else if (line.contains("Extracting sources")) {
-                                    updateStage("extracting", "Extracting stars from image...")
-                                } else if (line.contains("Solving...")) {
-                                    updateStage("solving", "Solving star pattern...")
-                                } else if (line.contains("Solving field")) {
-                                    updateStage("finalizing", "Finalizing solution...")
+                    // Log stdout and update status based on output
+                    executor.execute {
+                        val outLog = File(astroPath, "solve-out.log")
+                        outLog.printWriter().use { writer ->
+                            process.inputStream.bufferedReader().forEachLine { line ->
+                                writer.println(line)
+                                handler.post {
+                                    when {
+                                        line.contains("Reading input file") ->
+                                            statusText.text = "Reading input file..."
+                                        line.contains("Extracting sources") ->
+                                            statusText.text = "Extracting stars from image..."
+                                        line.contains("Solving...") ->
+                                            statusText.text = "Solving star pattern..."
+                                        line.contains("Solving field") ->
+                                            statusText.text = "Finalizing solution..."
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                thread {
-                    stderr.printWriter().use { err ->
-                        process.errorStream.bufferedReader().forEachLine { err.println(it) }
+                    // Log stderr
+                    executor.execute {
+                        val errLog = File(astroPath, "solve-err.log")
+                        errLog.printWriter().use { writer ->
+                            process.errorStream.bufferedReader().forEachLine { writer.println(it) }
+                        }
                     }
-                }
 
-                // Wait for process completion in a background thread to avoid blocking UI
-                thread {
-                    // Wait for 30 seconds max to ensure responsive UI and prevent excessive battery drain
+                    // Wait for completion with timeout
                     val finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS)
-
-                    // Handle process completion on the main thread
                     handler.post {
                         if (!finished) {
                             process.destroy()
-                            updateStage("reading", "⚠️ Solver interrupted due to timeout")
-                            // Add a small delay to ensure the UI updates before navigating
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                navigateToResultActivity(context, imageFile, currentLocation)
-                            }, 1000) // 1000ms delay to allow progress bar to update
-                            return@post
-                        }
-
-                        val exitCode = process.exitValue()
-                        if (exitCode != 0) {
-                            updateStage("reading", "⚠️ Solver could not solve this image")
-                            // Add a small delay to ensure the UI updates before navigating
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                navigateToResultActivity(context, imageFile, currentLocation)
-                            }, 1000) // 1000ms delay to allow progress bar to update
-                            return@post
-                        }
-
-                        // Process results after successful completion
-                        val outputDir = File("$astroPath/output")
-
-                        if (outputDir.exists() && outputDir.isDirectory) {
-                            val filesToSend = outputDir.listFiles()?.filter { it.isFile } ?: emptyList()
-                            val corrFile = filesToSend.find { it.name.contains("corr") }
-                            if (corrFile != null) {
-                                // Set progress to maximum before navigating
-                                updateStage("finalizing", "✅ Solution found!")
-                                // Add a small delay to ensure the UI updates before navigating
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                    navigateToResultActivity(context, imageFile, currentLocation)
-                                }, 1000) // 1000ms delay to allow progress bar to update
-                            }
-                            if (filesToSend.isNotEmpty()) {
-                                for (file in filesToSend) {
-                                    val anglesToSend = if (currentAngles == "unknown") "Photo has no EXIF" else currentAngles
-                                    FileManager.saveFileToDownloads(context, file)
-                                }
-                                updateStage("finalizing", "✅ All files from output sent")
-                            } else {
-                                updateStage("reading", "⚠️ Output folder is empty")
-                                // Add a small delay to ensure the UI updates before navigating
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                    navigateToResultActivity(context, imageFile, currentLocation)
-                                }, 1000) // 1000ms delay to allow progress bar to update
-                            }
+                            statusText.text = "⚠️ Solver timed out"
+                        } else if (process.exitValue() != 0) {
+                            statusText.text = "⚠️ Solver failed with code ${process.exitValue()}"
                         } else {
-                            updateStage("reading", "⚠️ Output folder not found")
-                            // Add a small delay to ensure the UI updates before navigating
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                navigateToResultActivity(context, imageFile, currentLocation)
-                            }, 1000) // 1000ms delay to allow progress bar to update
+                            statusText.text = "✅ Solution found!"
                         }
                     }
-                }
 
-            } catch (e: Exception) {
-                updateStage("reading", "❌ Solver error: ${e.message}")
-                // Add a small delay to ensure the UI updates before navigating
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    navigateToResultActivity(context, imageFile, currentLocation)
-                }, 1000) // 1000ms delay to allow progress bar to update
+                    // Delay briefly to show final status
+                    handler.postDelayed({
+                        // Navigate to result screen
+                        navigateToResultActivity(context, imageFile, currentLocation)
+                    }, 1_000)
+
+                } catch (e: Exception) {
+                    handler.post {
+                        statusText.text = "❌ Solver error: ${e.message}"
+                    }
+                    handler.postDelayed({
+                        navigateToResultActivity(context, imageFile, currentLocation)
+                    }, 1_000)
+                }
+            }
+
+            // Add a timeout to prevent hanging if the executor gets stuck
+            executor.execute {
+                try {
+                    Thread.sleep(35_000) // 35 seconds timeout (slightly longer than process timeout)
+                    if (currentProcess?.isAlive == true) {
+                        currentProcess?.destroy()
+                        handler.post {
+                            statusText.text = "⚠️ Processing timed out"
+                        }
+                        handler.postDelayed({
+                            navigateToResultActivity(context, imageFile, currentLocation)
+                        }, 1_000)
+                    }
+                } catch (e: InterruptedException) {
+                    // Timeout thread was interrupted, which is fine
+                }
             }
         }
 
         /**
-         * Navigates to the ResultActivity
-         * @param context The application context
-         * @param imageFile The image file to display
-         * @param currentLocation The current location string
+         * Navigate to the ResultActivity with the solved image.
          */
-        private fun navigateToResultActivity(context: Context, imageFile: File, currentLocation: String) {
-            val intent = Intent(context, ResultActivity::class.java)
-            intent.putExtra("imagePath", imageFile.absolutePath)
-            intent.putExtra("currentLocation", currentLocation)
+        private fun navigateToResultActivity(
+            context: Context,
+            imageFile: File,
+            currentLocation: String
+        ) {
+            val intent = Intent(context, ResultActivity::class.java).apply {
+                putExtra("imagePath", imageFile.absolutePath)
+                putExtra("currentLocation", currentLocation)
+            }
             context.startActivity(intent)
         }
 
         /**
-         * Cancels any running solver process and cleans up resources
-         * Call this method when navigating back or when the activity is destroyed
-         * @param progressBar The progress bar to reset (optional)
-         * @param statusText The status text to reset (optional)
+         * Cancel any running solver process and cleanup.
          */
-        fun cancelSolver(progressBar: android.widget.ProgressBar? = null, statusText: TextView? = null) {
-            // Cancel handler callbacks
-            currentProgressUpdater?.let { updater ->
-                currentHandler?.removeCallbacks(updater)
-            }
+        fun cancelSolver(progressBar: ProgressBar? = null, statusText: TextView? = null) {
+            // Remove pending UI updates
+            currentProgressUpdater?.let { currentHandler?.removeCallbacks(it) }
 
-            // Destroy the process if it's running
-            currentProcess?.let { process ->
-                if (process.isAlive) {
-                    process.destroy()
-                }
-            }
+            // Destroy running process
+            currentProcess?.takeIf { it.isAlive }?.destroy()
 
-            // Reset UI elements if provided
-            progressBar?.let {
-                it.progress = 0
-                it.visibility = android.view.View.INVISIBLE
+            // Reset UI
+            progressBar?.apply {
+                progress = 0
+                visibility = ProgressBar.INVISIBLE
             }
-
-            statusText?.let {
-                it.text = ""
-                it.visibility = android.view.View.INVISIBLE
+            statusText?.apply {
+                text = ""
+                visibility = TextView.INVISIBLE
             }
 
             // Clear references
             currentProcess = null
             currentHandler = null
             currentProgressUpdater = null
+
+            // Note: We don't shut down the executor here as it's shared across multiple operations
+            // The executor will be properly shut down when the app is closed via the shutdown hook
         }
     }
 }

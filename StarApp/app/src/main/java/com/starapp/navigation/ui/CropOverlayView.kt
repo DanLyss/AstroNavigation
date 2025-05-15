@@ -24,7 +24,7 @@ class CropOverlayView @JvmOverloads constructor(
     private val paint = Paint().apply {
         color = Color.WHITE
         style = Paint.Style.STROKE
-        strokeWidth = 4f
+        strokeWidth = 6f // Increased stroke width for better visibility
     }
 
     // Paint for drawing the semi-transparent overlay outside the crop area
@@ -96,17 +96,17 @@ class CropOverlayView @JvmOverloads constructor(
                     // Calculate the distance moved
                     val dx = event.x - lastTouchX
                     val dy = event.y - lastTouchY
-                    
+
                     // Determine the direction of the resize
                     // For symmetric cropping, we'll adjust the cropSizePercent based on the movement
                     val distance = (dx + dy) / 2 // Average of horizontal and vertical movement
-                    
+
                     // Adjust crop size percentage based on movement
                     // Moving outward (positive distance) increases the crop size
                     // Moving inward (negative distance) decreases the crop size
                     cropSizePercent = (cropSizePercent + distance / min(scaledImageWidth, scaledImageHeight) * 0.5f)
                         .coerceIn(0.1f, 0.95f) // Limit to reasonable values
-                    
+
                     lastTouchX = event.x
                     lastTouchY = event.y
                     invalidate()
@@ -160,11 +160,11 @@ class CropOverlayView @JvmOverloads constructor(
         // Calculate the crop size based on the smaller dimension
         val smallerDimension = min(scaledImageWidth, scaledImageHeight)
         val cropSize = smallerDimension * cropSizePercent
-        
+
         // Calculate the center of the displayed image
         val centerX = offsetX + scaledImageWidth / 2
         val centerY = offsetY + scaledImageHeight / 2
-        
+
         // Set the crop rectangle centered on the image
         cropRect.left = centerX - cropSize / 2
         cropRect.top = centerY - cropSize / 2
@@ -177,13 +177,13 @@ class CropOverlayView @JvmOverloads constructor(
      */
     fun getCropRectInImageCoordinates(): RectF {
         val imageRect = RectF()
-        
+
         // Convert from view coordinates to image coordinates (0-1 range)
         imageRect.left = (cropRect.left - offsetX) / scaledImageWidth
         imageRect.top = (cropRect.top - offsetY) / scaledImageHeight
         imageRect.right = (cropRect.right - offsetX) / scaledImageWidth
         imageRect.bottom = (cropRect.bottom - offsetY) / scaledImageHeight
-        
+
         return imageRect
     }
 }

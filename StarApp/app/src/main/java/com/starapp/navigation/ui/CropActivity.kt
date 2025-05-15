@@ -89,18 +89,47 @@ class CropActivity : AppCompatActivity() {
     }
 
     private fun loadAndDisplayImage(path: String) {
-        // Load the bitmap from file using the manager
-        originalBitmap = imageCropManager.loadImageFromPath(path)
-        originalBitmap?.let { bitmap ->
-            // Display the bitmap in the ImageView
-            imageView.setImageBitmap(bitmap)
+        // Show loading state
+        statusText.text = "Loading image..."
 
-            // Set the image dimensions in the overlay view
-            cropOverlay.imageWidth = bitmap.width
-            cropOverlay.imageHeight = bitmap.height
+        // Load the bitmap from file using the manager asynchronously
+        imageCropManager.loadImageFromPath(path) { bitmap ->
+            originalBitmap = bitmap
+            bitmap?.let {
+                // Display the bitmap in the ImageView
+                imageView.setImageBitmap(it)
 
-            // Display angles captured at the moment the photo was taken
-            anglesText.text = "Angles at capture: $currentAngles"
+                // Set the image dimensions in the overlay view
+                cropOverlay.imageWidth = it.width
+                cropOverlay.imageHeight = it.height
+
+                // Force redraw of the overlay view
+                cropOverlay.invalidate()
+
+                // Extract angles from EXIF data if available
+                try {
+                    val exif = androidx.exifinterface.media.ExifInterface(path)
+                    val angles = com.starapp.navigation.util.ExifUtils.extractOrientationAngles(exif)
+                    val anglesStr = "Yaw=${angles.first}, Pitch=${angles.second}, Roll=${angles.third}"
+
+                    // Update currentAngles if we got valid data from EXIF
+                    if (angles != Triple(0.0, 0.0, 0.0)) {
+                        currentAngles = anglesStr
+                    }
+
+                    // Display angles from EXIF data or from intent
+                    anglesText.text = "Angles at capture: $currentAngles"
+                } catch (e: Exception) {
+                    // If there's an error reading EXIF, use the angles from intent
+                    anglesText.text = "Angles at capture: $currentAngles"
+                }
+
+                // Reset status text
+                statusText.text = "Ready to process image. Crop or continue."
+            } ?: run {
+                // Handle error case
+                statusText.text = "Error loading image"
+            }
         }
     }
 
@@ -112,34 +141,69 @@ class CropActivity : AppCompatActivity() {
 
         // Confirm button - crop the image and proceed
         confirmButton.setOnClickListener {
-            val croppedImagePath = cropImage()
-            if (croppedImagePath != null) {
-                proceedWithImage(croppedImagePath)
-            } else {
-                // If cropping fails, proceed with original image
-                proceedWithImage(imagePath!!)
+            // Show cropping state
+            statusText.text = "Cropping image..."
+
+            // Use the asynchronous version with callback
+            cropImage { croppedImagePath ->
+                if (croppedImagePath != null) {
+                    proceedWithImage(croppedImagePath)
+                } else {
+                    // If cropping fails, proceed with original image
+                    proceedWithImage(imagePath!!)
+                }
             }
         }
     }
 
-    private fun cropImage(): String? {
-        val bitmap = originalBitmap ?: return null
-        val originalImagePath = imagePath ?: return null
+    private fun cropImage(callback: (String?) -> Unit) {
+        val bitmap = originalBitmap
+        val originalImagePath = imagePath
+
+        if (bitmap == null || originalImagePath == null) {
+            callback(null)
+            return
+        }
+
+        // Show cropping state
+        statusText.text = "Cropping image..."
 
         // Get the crop rectangle in image coordinates (0-1 range)
         val cropRect = cropOverlay.getCropRectInImageCoordinates()
 
-        // Use the manager to crop the image
-        return imageCropManager.cropImage(
+        // Use the manager to crop the image asynchronously
+        imageCropManager.cropImage(
             imagePath = originalImagePath,
             bitmap = bitmap,
             cropRect = cropRect,
             currentLocation = currentLocation,
             currentAngles = currentAngles
-        )
+        ) { croppedImagePath ->
+            // Reset status text
+            statusText.text = if (croppedImagePath != null) {
+                "Image cropped successfully"
+            } else {
+                "Error cropping image"
+            }
+
+            // Pass the result to the callback
+            callback(croppedImagePath)
+        }
     }
 
     private fun proceedWithImage(path: String) {
+        // Show loading indicator and update status text
+        progressBar.visibility = android.view.View.VISIBLE
+        statusText.visibility = android.view.View.VISIBLE
+        statusText.text = "Starting star analysis... Please wait"
+
+        // Show a toast message to inform the user to wait
+        android.widget.Toast.makeText(
+            this,
+            "Starting star analysis. Please wait while computations are performed.",
+            android.widget.Toast.LENGTH_LONG
+        ).show()
+
         // Use the manager to process the image with astrometry
         imageCropManager.processImageWithAstrometry(
             imagePath = path,
@@ -173,5 +237,15 @@ class CropActivity : AppCompatActivity() {
         super.onDestroy()
         // Cancel any running solver process when the activity is destroyed
         com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Restore progress bar visibility when returning from stars activity
+        if (progressBar.progress > 0) {
+            progressBar.progress = 0
+            progressBar.visibility = android.view.View.VISIBLE
+            statusText.visibility = android.view.View.VISIBLE
+        }
     }
 }

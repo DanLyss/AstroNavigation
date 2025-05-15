@@ -18,12 +18,20 @@
         <ImageView
                 android:id="@+id/cropImageView"
                 android:layout_width="match_parent"
-                android:layout_height="564dp"
+                android:layout_height="match_parent"
                 android:scaleType="fitCenter"/>
         <com.starapp.navigation.ui.CropOverlayView
                 android:id="@+id/cropOverlay"
                 android:layout_width="match_parent"
-                android:layout_height="564dp"/>
+                android:layout_height="match_parent"
+                android:visibility="visible"/>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100%"
+                android:textSize="12sp"
+                android:layout_gravity="end|top"
+                android:padding="8dp"/>
     </FrameLayout>
 
     <!-- Instruction text -->
@@ -46,7 +54,7 @@
         android:id="@+id/exposureTimeText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Exposure: Unknown"
+        android:text="Angles"
         android:textSize="14sp"
         android:background="#80000000"
         android:textColor="#FFFFFF"
@@ -79,7 +87,7 @@
             android:layout_width="377dp"
             android:layout_height="31dp"
             android:max="100"
-            android:visibility="invisible"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/progressCalibration"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -105,7 +113,7 @@
                 android:layout_weight="1"
                 android:text="0%"
                 android:textSize="12sp"
-                android:gravity="start"/>
+                android:gravity="center"/>
 
             <TextView
                 android:layout_width="0dp"
@@ -138,7 +146,6 @@
                 android:text="80%"
                 android:textSize="12sp"
                 android:gravity="center"/>
-
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -147,13 +154,6 @@
                 android:textSize="12sp"
                 android:gravity="center"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="146%s"
-                android:textSize="12sp"
-                android:gravity="end"/>
     </LinearLayout>
 
     <!-- Button container -->

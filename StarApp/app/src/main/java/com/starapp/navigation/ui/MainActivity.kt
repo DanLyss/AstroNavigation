@@ -88,8 +88,8 @@ class MainActivity : AppCompatActivity() {
         // Initialize directories and extract assets
         initializeFileSystem()
 
-        // Clean up old .corr files when MainActivity is created
-        FileManager.cleanupCorrFiles(astroPath)
+        // Clean up old .corr files when MainActivity is created (asynchronously)
+        FileManager.cleanupCorrFilesAsync(astroPath)
 
         // Set up exposure slider
         setupExposureSlider()
@@ -140,9 +140,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeFileSystem() {
-        FileManager.createDirectories(astroPath)
-        FileManager.extractZipAssets(this, astroPath)
-        FileManager.generateAstrometryConfig(astroPath)
+        // Show a loading indicator or message if needed
+        statusText.text = "Initializing..."
+
+        // Use a background thread for file operations
+        Thread {
+            try {
+                FileManager.createDirectories(astroPath)
+                FileManager.extractZipAssets(this, astroPath)
+                FileManager.generateAstrometryConfig(astroPath)
+
+                // Update UI on main thread when done
+                runOnUiThread {
+                    statusText.text = ""
+                    // Start camera preview after file system is initialized
+                    if (permissionManager.areAllPermissionsGranted()) {
+                        restartCameraWithExposure()
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle errors on main thread
+                runOnUiThread {
+                    statusText.text = "Initialization error: ${e.message}"
+                }
+            }
+        }.start()
     }
 
     private fun initializeLocationAndSensors() {
@@ -210,9 +232,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun takePhoto() {
-        // Clean up old .corr files before taking a new photo
-        FileManager.cleanupCorrFiles(astroPath)
+        // Clean up old .corr files before taking a new photo (asynchronously)
+        // Use a callback to continue with photo capture after cleanup
+        FileManager.cleanupCorrFilesAsync(astroPath) {
+            // This runs after cleanup is complete
+            runOnUiThread {
+                continueWithPhotoCapture()
+            }
+        }
+    }
 
+    private fun continueWithPhotoCapture() {
         val photoFile = File(astroPath, "input.jpg")
         CameraManager.takePhoto(
             context = this,
@@ -238,22 +268,32 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null) {
-            // Clean up old .corr files before processing a selected image
-            FileManager.cleanupCorrFiles(astroPath)
+            // Store data for use after cleanup
+            val imageData = data
 
-            val uri = intentManager.extractGallerySelectionUri(data) ?: return
-            val destFile = File(astroPath, "input.jpg")
-
-            imageSelectionManager.processSelectedImage(
-                uri = uri,
-                destFile = destFile,
-                statusText = statusText,
-                currentLocation = currentLocation,
-                onSuccess = { angles: String ->
-                    currentAngles = angles
+            // Clean up old .corr files before processing a selected image (asynchronously)
+            FileManager.cleanupCorrFilesAsync(astroPath) {
+                // This runs after cleanup is complete
+                runOnUiThread {
+                    continueWithImageProcessing(imageData)
                 }
-            )
+            }
         }
+    }
+
+    private fun continueWithImageProcessing(data: Intent) {
+        val uri = intentManager.extractGallerySelectionUri(data) ?: return
+        val destFile = File(astroPath, "input.jpg")
+
+        imageSelectionManager.processSelectedImage(
+            uri = uri,
+            destFile = destFile,
+            statusText = statusText,
+            currentLocation = currentLocation,
+            onSuccess = { angles: String ->
+                currentAngles = angles
+            }
+        )
     }
 
     override fun onRequestPermissionsResult(

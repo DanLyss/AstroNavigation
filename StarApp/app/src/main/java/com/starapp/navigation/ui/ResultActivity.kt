@@ -21,6 +21,8 @@ class ResultActivity : AppCompatActivity() {
     private lateinit var intentManager: IntentManager
     private lateinit var uiManager: UIManager
 
+    private lateinit var progressBar: android.widget.ProgressBar
+
     private var currentLocation: String = "unknown"
     private var imagePath: String? = null
 
@@ -44,6 +46,7 @@ class ResultActivity : AppCompatActivity() {
         val imageView = findViewById<ImageView>(R.id.resultImageView)
         val overlay = findViewById<StarOverlayView>(R.id.starOverlay)
         val continueButton = findViewById<Button>(R.id.continueButton)
+        progressBar = findViewById(R.id.resultProgressBar)
 
         // Extract parameters from intent
         val params = intentManager.extractResultActivityParams(intent)
@@ -78,6 +81,9 @@ class ResultActivity : AppCompatActivity() {
                 continueButton = continueButton,
                 hasCorrFile = hasCorrFile
             ) {
+                // Show progress bar when navigating to next activity
+                progressBar.visibility = android.view.View.VISIBLE
+
                 val corrPath = resultManager.getCorrFilePath(imagePath!!)
                 if (corrPath != null) {
                     navigationManager.navigateToStarsActivity(
@@ -86,6 +92,9 @@ class ResultActivity : AppCompatActivity() {
                         corrPath = corrPath,
                         currentLocation = currentLocation
                     )
+                } else {
+                    // Hide progress bar if navigation fails
+                    progressBar.visibility = android.view.View.GONE
                 }
             }
         } else {
