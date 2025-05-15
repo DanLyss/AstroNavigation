@@ -22,9 +22,11 @@ class ResultActivity : AppCompatActivity() {
     private lateinit var uiManager: UIManager
 
     private lateinit var progressBar: android.widget.ProgressBar
+    private lateinit var overlay: StarOverlayView
 
     private var currentLocation: String = "unknown"
     private var imagePath: String? = null
+    private var starsVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +46,7 @@ class ResultActivity : AppCompatActivity() {
 
         // Get views from layout
         val imageView = findViewById<ImageView>(R.id.resultImageView)
-        val overlay = findViewById<StarOverlayView>(R.id.starOverlay)
+        overlay = findViewById<StarOverlayView>(R.id.starOverlay)
         val continueButton = findViewById<Button>(R.id.continueButton)
         progressBar = findViewById(R.id.resultProgressBar)
 
@@ -71,6 +73,9 @@ class ResultActivity : AppCompatActivity() {
                 bitmap = bitmap,
                 starPoints = points
             )
+
+            // Initially hide the star overlay
+            overlay.visibility = android.view.View.INVISIBLE
         }
 
         // Configure continue button based on .corr file existence
@@ -105,6 +110,14 @@ class ResultActivity : AppCompatActivity() {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        // Handle tap events to toggle star overlay visibility
+        if (event.action == MotionEvent.ACTION_UP) {
+            // Toggle visibility
+            starsVisible = !starsVisible
+            overlay.visibility = if (starsVisible) android.view.View.VISIBLE else android.view.View.INVISIBLE
+            return true
+        }
+
         // Pass touch events to the gesture manager
         return if (gestureManager.processTouchEvent(event)) {
             true
