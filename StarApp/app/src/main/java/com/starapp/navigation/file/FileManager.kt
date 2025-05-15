@@ -14,8 +14,11 @@ class FileManager {
     companion object {
         private const val TAG = "FileManager"
 
+        // Shared thread pool for file operations
+        private val fileExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+
         /**
-         * Cleans up old .corr files in the output directory
+         * Cleans up old .corr files in the output directory synchronously
          * @param astroPath The path to the astrometry files
          */
         fun cleanupCorrFiles(astroPath: String) {
@@ -26,7 +29,19 @@ class FileManager {
         }
 
         /**
-         * Saves a file to the Downloads directory
+         * Cleans up old .corr files in the output directory asynchronously
+         * @param astroPath The path to the astrometry files
+         * @param callback Optional callback to be executed when cleanup is complete
+         */
+        fun cleanupCorrFilesAsync(astroPath: String, callback: (() -> Unit)? = null) {
+            fileExecutor.execute {
+                cleanupCorrFiles(astroPath)
+                callback?.invoke()
+            }
+        }
+
+        /**
+         * Saves a file to the Downloads directory synchronously
          * @param context The application context
          * @param sourceFile The source file to save
          */
@@ -42,6 +57,39 @@ class FileManager {
                 Toast.makeText(context, "✅ File saved: ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 Toast.makeText(context, "❌ Save error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        /**
+         * Saves a file to the Downloads directory asynchronously
+         * @param context The application context
+         * @param sourceFile The source file to save
+         * @param onComplete Optional callback to be executed when save is complete
+         */
+        fun saveFileToDownloadsAsync(context: Context, sourceFile: File, onComplete: ((success: Boolean) -> Unit)? = null) {
+            fileExecutor.execute {
+                try {
+                    val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    if (!downloadsFolder.exists()) {
+                        downloadsFolder.mkdirs()
+                    }
+                    val destFile = File(downloadsFolder, sourceFile.name)
+                    sourceFile.copyTo(destFile, overwrite = true)
+
+                    // Show toast on main thread
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        Toast.makeText(context, "✅ File saved: ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
+                    }
+
+                    onComplete?.invoke(true)
+                } catch (e: Exception) {
+                    // Show error on main thread
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        Toast.makeText(context, "❌ Save error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+
+                    onComplete?.invoke(false)
+                }
             }
         }
 
@@ -84,6 +132,9 @@ class FileManager {
             cfgFile.parentFile?.mkdirs()
             //can add more later if needed
             val lines = listOf(
+                "index $indexDir/index-4114.fits",
+                "index $indexDir/index-4115.fits",
+                "index $indexDir/index-4116.fits",
                 "index $indexDir/index-4117.fits",
                 "index $indexDir/index-4118.fits",
                 "index $indexDir/index-4119.fits"
