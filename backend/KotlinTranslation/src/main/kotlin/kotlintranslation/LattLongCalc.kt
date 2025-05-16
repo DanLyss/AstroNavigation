@@ -44,38 +44,37 @@ object LattLongCalc {
     }
 
 
-
     private fun solveLatitudeAndAzimuth(
-        stars: List<Star>, hemisphere: String="North"
-    ): kotlin.Pair<Double,Double> {
+        stars: List<Star>, hemisphere: String = "North"
+    ): kotlin.Pair<Double, Double> {
         var bestErr = Double.POSITIVE_INFINITY
         var bestAz0 = 0.0
         var bestPhi = 0.0
 
         for (i in 1..iters) {
             for (j in 1..iters) {
-                val rawAz0  = 2*PI*i/iters
-                val phiGuess= PI*j/iters
-                val sGuess  = rawAz0 * AZ_SCALE
+                val rawAz0 = 2 * PI * i / iters
+                val phiGuess = PI * j / iters
+                val sGuess = rawAz0 * AZ_SCALE
 
                 val model = MultivariateJacobianFunction { point ->
-                    val s      = point.getEntry(0)
+                    val s = point.getEntry(0)
                     val phiArg = point.getEntry(1)
-                    val az0    = s / AZ_SCALE
+                    val az0 = s / AZ_SCALE
 
-                    val resid  = DoubleArray(stars.size)
-                    val jac    = Array(stars.size) { DoubleArray(2) }
+                    val resid = DoubleArray(stars.size)
+                    val jac = Array(stars.size) { DoubleArray(2) }
 
                     for (k in stars.indices) {
-                        val star  = stars[k]
-                        val realAz= star.Az!! + az0
+                        val star = stars[k]
+                        val realAz = star.Az!! + az0
                         resid[k] = equation(star, realAz, phiArg)
 
-                        val (A,B,_) = eqSetup(star, realAz)
-                        val da     = -2*cos(star.Alt!!).pow(2) * cos(realAz)*sin(realAz)
-                        val db     = -2*cos(star.Alt!!)*sin(star.dec)*sin(realAz)
-                        val dR_daz0= phiArg*phiArg*da + phiArg*db
-                        val dR_dphi= 2*phiArg*A + B
+                        val (A, B, _) = eqSetup(star, realAz)
+                        val da = -2 * cos(star.Alt!!).pow(2) * cos(realAz) * sin(realAz)
+                        val db = -2 * cos(star.Alt!!) * sin(star.dec) * sin(realAz)
+                        val dR_daz0 = phiArg * phiArg * da + phiArg * db
+                        val dR_dphi = 2 * phiArg * A + B
 
                         jac[k][0] = dR_daz0 * (1.0 / AZ_SCALE)
                         jac[k][1] = dR_dphi
@@ -90,33 +89,35 @@ object LattLongCalc {
                 val problem = LeastSquaresBuilder()
                     .start(doubleArrayOf(sGuess, phiGuess))
                     .model(model)
-                    .target(DoubleArray(stars.size){0.0})
+                    .target(DoubleArray(stars.size) { 0.0 })
                     .maxEvaluations(500).maxIterations(500)
                     .checker(checker)
                     .build()
 
                 try {
-                    val opt   = LevenbergMarquardtOptimizer().optimize(problem)
-                    val sol   = opt.point.toArray()
-                    val sSol  = sol[0]
-                    val phiArg= sol[1]
+                    val opt = LevenbergMarquardtOptimizer().optimize(problem)
+                    val sol = opt.point.toArray()
+                    val sSol = sol[0]
+                    val phiArg = sol[1]
                     if (phiArg !in -1.0..1.0) continue
 
                     var phi = acos(phiArg)
-                    if (phi > PI/2) phi -= PI
-                    if ((phiArg<0 && hemisphere=="North")
-                        ||(phiArg>0 && hemisphere=="South")) continue
+                    if (phi > PI / 2) phi -= PI
+                    if ((phiArg < 0 && hemisphere == "North")
+                        || (phiArg > 0 && hemisphere == "South")
+                    ) continue
 
-                    val errs = opt.residuals.toArray().map{ abs(it) }
+                    val errs = opt.residuals.toArray().map { abs(it) }
                     val maxE = errs.maxOrNull() ?: continue
-                    val az0SOLUTION = norm(sSol / AZ_SCALE, 0.0, 2*PI)
+                    val az0SOLUTION = norm(sSol / AZ_SCALE, 0.0, 2 * PI)
 
                     if (maxE < bestErr) {
                         bestErr = maxE
                         bestAz0 = az0SOLUTION
                         bestPhi = phi
                     }
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
         }
 
@@ -125,24 +126,42 @@ object LattLongCalc {
     }
 
 
-    fun meanLatitude(cluster: StarCluster, hemisphere: String = "North"): kotlin.Pair<Double,Double> {
+    fun meanLatitude(
+        cluster: StarCluster,
+        hemisphere: String = "North"
+    ): kotlin.Pair<Double, Double> {
         val cnt = (cluster.stars.size * 0.8).toInt()
         var ans = mutableListOf<Pair<Double, Double>>()
         var otherStars = cluster.stars.toMutableList()
-        val anchor = cluster.stars[0]
+        var anchor = cluster.stars[0]
         for (star in cluster.stars) {
-            if (abs(star.xMeasuredCoord) < 1e-3 && abs(star.yMeasuredCoord) < 1e-3){
-                val anchor = star
-                otherStars.remove(star)
-                break
+            if (abs(star.xMeasuredCoord) * abs(star.xMeasuredCoord)
+                + abs(star.yMeasuredCoord) * abs(star.yMeasuredCoord) <
+                abs(anchor.xMeasuredCoord) * abs(anchor.xMeasuredCoord)
+                + abs(anchor.yMeasuredCoord) * abs(anchor.yMeasuredCoord)) {
+                anchor = star
             }
         }
-        for (k in 1..50){
-            val currentStars = listOf<Star>(anchor)+otherStars.shuffled().take(cnt)
+        otherStars.remove(anchor)
+        for (k in 1..50) {
+            val currentStars = listOf<Star>(anchor) + otherStars.shuffled().take(cnt)
             ans.add(solveLatitudeAndAzimuth(currentStars, hemisphere))
         }
-        return ans.map{it.first}.average() to ans.map{it.second}.average()
+        val lats = ans.map { it.first }.sorted()
+        val azs = ans.map { it.second }.sorted()
+        val trim = (ans.size * 0.25).toInt().coerceAtLeast(1)
+
+        // central 50% of the data:
+        val centralLats = lats.subList(trim, lats.size - trim)
+        val centralAzs = azs.subList(trim, azs.size - trim)
+
+        // final robust estimate:
+        val meanLat = centralLats.average()
+        val meanAz = centralAzs.average()
+
+        return meanLat to meanAz
     }
+
 
     private fun timeEq(days: Double, year: Int): Double {
         val d = 6.24 + 0.0172 * (365.35 * (year - 2000) + days)
@@ -167,9 +186,13 @@ object LattLongCalc {
                 0.000289 * sin(Math.toRadians(3 * M))
 
         val trueLong = L0 + C
-        val epsilon = 23 + 26.0 / 60 + 21.448 / 3600 - (46.8150 * T + 0.00059 * T * T - 0.001813 * T * T * T) / 3600
+        val epsilon =
+            23 + 26.0 / 60 + 21.448 / 3600 - (46.8150 * T + 0.00059 * T * T - 0.001813 * T * T * T) / 3600
         var alphaRad =
-            atan2(cos(Math.toRadians(epsilon)) * sin(Math.toRadians(trueLong)), cos(Math.toRadians(trueLong)))
+            atan2(
+                cos(Math.toRadians(epsilon)) * sin(Math.toRadians(trueLong)),
+                cos(Math.toRadians(trueLong))
+            )
 
         if (alphaRad < 0) {
             alphaRad += 2 * Math.PI
@@ -196,9 +219,10 @@ object LattLongCalc {
 
     private fun dayOfYearFraction(dt: ZonedDateTime): Double {
         val start = dt.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS)
-        val secs  = Duration.between(start, dt).seconds + dt.nano / 1e9
+        val secs = Duration.between(start, dt).seconds + dt.nano / 1e9
         return secs / 86400.0
     }
+
     private fun trueLocalTime(
         star: Star,
         days: Double,
@@ -221,7 +245,7 @@ object LattLongCalc {
     }
 
     fun meanLongitude(cluster: StarCluster, dt: ZonedDateTime): Double {
-        val phi  = cluster.phi
+        val phi = cluster.phi
         val days = dayOfYearFraction(dt)
         val year = dt.year
         val hour = toHours(dt)

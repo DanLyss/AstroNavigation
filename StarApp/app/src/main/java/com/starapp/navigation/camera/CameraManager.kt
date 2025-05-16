@@ -120,12 +120,12 @@ class CameraManager {
 
         /**
          * Takes a photo using the image capture use case
-         * 
+         *
          * IMPORTANT: This method captures the device orientation angles at the exact moment
          * the photo is taken (before calling takePicture), not when the photo is saved.
          * This ensures that the angles stored in EXIF data accurately reflect the device's
          * orientation at the moment of capture, which is critical for astronomical calculations.
-         * 
+         *
          * @param context The application context
          * @param imageCapture The image capture use case
          * @param outputFile The output file to save the photo to

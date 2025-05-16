@@ -64,10 +64,11 @@ object AstrometryReader {
         }
 
 
-        val offset = filtered
-            .mapIndexed { i, props -> xList[i] to yList[i] }
-            .minByOrNull { (x, y) -> (x - cx).pow(2) + (y - cy).pow(2) }
-            ?: (0.0 to 0.0)
+//        val offset = filtered
+//            .mapIndexed { i, props -> xList[i] to yList[i] }
+//            .minByOrNull { (x, y) -> (x - cx).pow(2) + (y - cy).pow(2) }
+//            ?: (0.0 to 0.0)
+        val offset = cx to cy
 
         return filtered.map { props ->
             val rawX = props["field_x"] ?: 0.0
