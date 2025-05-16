@@ -27,9 +27,10 @@ object TestCases {
 
         TestCase(
             pixelCoords = listOf(
-                0.0 to 0.0,
+
                 -83.0 to -157.0,
                 -336.0 to -86.0,
+                0.0 to 0.0,
                 -334.0 to 64.0,
                 -476.0 to 178.0,
                 -584.0 to 279.0,
@@ -39,9 +40,10 @@ object TestCases {
                 584.0 to -172.0
             ),
             raDec = listOf(
-                (raToDeg(11, 3, 46) to decToDeg(61, 44, 40)),
+
                 (raToDeg(11, 1, 53) to decToDeg(56, 22, 34)),
                 (raToDeg(11, 53, 52) to decToDeg(53, 41, 21)),
+                (raToDeg(11, 3, 46) to decToDeg(61, 44, 40)),
                 (raToDeg(12, 15, 27) to decToDeg(57, 1, 39)),
                 (raToDeg(12, 54, 3) to decToDeg(55, 57, 20)),
                 (raToDeg(13, 25, 57) to decToDeg(54, 55, 18)),
@@ -51,9 +53,10 @@ object TestCases {
                 (raToDeg(8, 30, 20) to decToDeg(60, 42, 41))
             ),
             azAltDeg = listOf(
-                (156.62861111111113 to 30.499722222222225),
+
                 (153.88222222222223 to 25.709722222222222),
                 (145.24777777777777 to 27.378888888888888),
+                (156.62861111111113 to 30.499722222222225),
                 (144.77972222222223 to 31.885555555555555),
                 (139.1975 to 34.67388888888889),
                 (134.66222222222223 to 37.006388888888885),

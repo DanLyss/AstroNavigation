@@ -98,6 +98,7 @@ class StarCluster(
     val rotationAngle: Double,
     val timeGMT: String = "2001-09-11T22:00:00+02:00"
 ) {
+    var anchor: Star = stars[0]
     var angularXSize: Double = 0.0
     var angularYSize: Double = 0.0
     var pixLengthX: Double = 100.0
@@ -107,13 +108,23 @@ class StarCluster(
     var longitude: Double = 0.0
 
     init {
-        setNormalXYForAll()
-        solveAngularSizes()
-        setAltAzForAll()
+        setNormalXYForAll() //perfect
+        solveAngularSizes() //good enough
+        setAltAzForAll() //good. note Az = 0 for (0,0)
+        for (star in stars) {
+            if (abs(star.xMeasuredCoord) * abs(star.xMeasuredCoord)
+                + abs(star.yMeasuredCoord) * abs(star.yMeasuredCoord) <
+                abs(anchor.xMeasuredCoord) * abs(anchor.xMeasuredCoord)
+                + abs(anchor.yMeasuredCoord) * abs(anchor.yMeasuredCoord)) {
+                anchor = star
+            }
+        }
         val result = LattLongCalc.meanLatitude(this)
+        //AzStar0 - Azimuth for the closest to the center star
         AzStar0 = result.second
+        //phi - latitude. correct
         phi = result.first
-        makeAzAbsolute()
+        makeAzAbsolute(anchor.Az!!)
         val dtUtc = ZonedDateTime
             .parse(timeGMT, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             .withZoneSameInstant(ZoneOffset.UTC)
@@ -150,9 +161,9 @@ class StarCluster(
         }
     }
 
-    private fun makeAzAbsolute() {
+    private fun makeAzAbsolute(shift: Double = 0.0) {
         for (star in stars) {
-            star.Az = (star.Az!! + AzStar0) % (2 * Math.PI)
+            star.Az = (star.Az!! + (AzStar0 - shift)) % (2 * Math.PI)
         }
     }
 }

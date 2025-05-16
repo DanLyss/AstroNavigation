@@ -108,11 +108,11 @@ class StarProcessingManager(private val context: Context) {
             appendLine("X size: %.2f° per 100 pixels".format(Math.toDegrees(result.cluster.angularXSize)))
             appendLine("Y size: %.2f° per 100 pixels".format(Math.toDegrees(result.cluster.angularYSize)))
             appendLine("Cluster Az₀: %.2f°".format(Math.toDegrees(result.cluster.AzStar0)))
-            appendLine()
             result.cluster.stars.forEachIndexed { i, star ->
                 appendLine(
-                    "⭐ Star ${i + 1}: Alt = %.1f°, Az = %.1f°"
-                        .format(Math.toDegrees(star.Alt!!), Math.toDegrees(star.Az!!))
+                    "⭐ Star ${i + 1}: Alt = %.1f°, Az = %.1f°, xCoord = %.1f, yCoord = %.1f"
+                        .format(Math.toDegrees(star.Alt!!), Math.toDegrees(star.Az!!),
+                            star.xCoord, star.yCoord)
                 )
             }
         }

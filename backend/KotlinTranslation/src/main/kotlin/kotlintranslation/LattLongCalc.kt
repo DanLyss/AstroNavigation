@@ -46,29 +46,29 @@ object LattLongCalc {
 
     private fun solveLatitudeAndAzimuth(
         stars: List<Star>, hemisphere: String = "North"
-    ): kotlin.Pair<Double, Double> {
+    ): Pair<Double, Double> {
         var bestErr = Double.POSITIVE_INFINITY
         var bestAz0 = 0.0
         var bestPhi = 0.0
 
         for (i in 1..iters) {
             for (j in 1..iters) {
-                val rawAz0 = 2 * PI * i / iters
+                val rawAz0   = 2 * PI * i / iters
                 val phiGuess = PI * j / iters
-                val sGuess = rawAz0 * AZ_SCALE
+                val sGuess   = rawAz0 * AZ_SCALE
 
                 val model = MultivariateJacobianFunction { point ->
-                    val s = point.getEntry(0)
+                    val s      = point.getEntry(0)
                     val phiArg = point.getEntry(1)
-                    val az0 = s / AZ_SCALE
+                    val az0    = s / AZ_SCALE
 
                     val resid = DoubleArray(stars.size)
-                    val jac = Array(stars.size) { DoubleArray(2) }
+                    val jac   = Array(stars.size) { DoubleArray(2) }
 
                     for (k in stars.indices) {
-                        val star = stars[k]
+                        val star   = stars[k]
                         val realAz = star.Az!! + az0
-                        resid[k] = equation(star, realAz, phiArg)
+                        resid[k]   = equation(star, realAz, phiArg)
 
                         val (A, B, _) = eqSetup(star, realAz)
                         val da = -2 * cos(star.Alt!!).pow(2) * cos(realAz) * sin(realAz)
@@ -85,19 +85,20 @@ object LattLongCalc {
                         Array2DRowRealMatrix(jac)
                     )
                 }
-                val checker = EvaluationRmsChecker(1e-9)
+
                 val problem = LeastSquaresBuilder()
                     .start(doubleArrayOf(sGuess, phiGuess))
                     .model(model)
                     .target(DoubleArray(stars.size) { 0.0 })
-                    .maxEvaluations(500).maxIterations(500)
-                    .checker(checker)
+                    .maxEvaluations(500)
+                    .maxIterations(500)
+                    .checker(EvaluationRmsChecker(1e-9))
                     .build()
 
                 try {
-                    val opt = LevenbergMarquardtOptimizer().optimize(problem)
-                    val sol = opt.point.toArray()
-                    val sSol = sol[0]
+                    val opt    = LevenbergMarquardtOptimizer().optimize(problem)
+                    val sol    = opt.point.toArray()
+                    val sSol   = sol[0]
                     val phiArg = sol[1]
                     if (phiArg !in -1.0..1.0) continue
 
@@ -109,21 +110,23 @@ object LattLongCalc {
 
                     val errs = opt.residuals.toArray().map { abs(it) }
                     val maxE = errs.maxOrNull() ?: continue
-                    val az0SOLUTION = norm(sSol / AZ_SCALE, 0.0, 2 * PI)
+                    val az0Sol = norm(sSol / AZ_SCALE, 0.0, 2 * PI)
 
+                    // update best as before
                     if (maxE < bestErr) {
                         bestErr = maxE
-                        bestAz0 = az0SOLUTION
+                        bestAz0 = az0Sol
                         bestPhi = phi
                     }
                 } catch (_: Exception) {
+                    // skip failures
                 }
             }
         }
 
-
         return bestPhi to bestAz0
     }
+
 
 
     fun meanLatitude(
@@ -133,20 +136,12 @@ object LattLongCalc {
         val cnt = (cluster.stars.size * 0.8).toInt()
         var ans = mutableListOf<Pair<Double, Double>>()
         var otherStars = cluster.stars.toMutableList()
-        var anchor = cluster.stars[0]
-        for (star in cluster.stars) {
-            if (abs(star.xMeasuredCoord) * abs(star.xMeasuredCoord)
-                + abs(star.yMeasuredCoord) * abs(star.yMeasuredCoord) <
-                abs(anchor.xMeasuredCoord) * abs(anchor.xMeasuredCoord)
-                + abs(anchor.yMeasuredCoord) * abs(anchor.yMeasuredCoord)) {
-                anchor = star
-            }
-        }
+        var anchor = cluster.anchor
         otherStars.remove(anchor)
         for (k in 1..50) {
             val currentStars = listOf<Star>(anchor) + otherStars.shuffled().take(cnt)
             ans.add(solveLatitudeAndAzimuth(currentStars, hemisphere))
-        }
+       }
         val lats = ans.map { it.first }.sorted()
         val azs = ans.map { it.second }.sorted()
         val trim = (ans.size * 0.25).toInt().coerceAtLeast(1)
@@ -158,7 +153,6 @@ object LattLongCalc {
         // final robust estimate:
         val meanLat = centralLats.average()
         val meanAz = centralAzs.average()
-
         return meanLat to meanAz
     }
 
@@ -258,15 +252,15 @@ object LattLongCalc {
         if (longs.size < 4) return longs.average()
 
         val sorted = longs.sorted()
-        val q1Index = (sorted.size * 0.25).toInt()
-        val q3Index = (sorted.size * 0.75).toInt()
+
+        val q1Index = (sorted.size * 0.35).toInt()
+        val q3Index = (sorted.size * 0.65).toInt()
         val q1 = sorted[q1Index]
         val q3 = sorted[q3Index]
-        val iqr = q3 - q1
-        val lowerFence = q1 - 1.5 * iqr
-        val upperFence = q3 + 1.5 * iqr
+        val lowerFence = q1
+        val upperFence = q3
         val filtered = sorted.filter { it in lowerFence..upperFence }
-
-        return if (filtered.isEmpty()) longs.average() else filtered.average()
+        val ans = if (filtered.isEmpty()) longs.average() else filtered.average()
+        return ans
     }
 }
