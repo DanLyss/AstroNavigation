@@ -1,8 +1,13 @@
 package com.starapp.navigation.ui.manager
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import com.starapp.navigation.star.StarProcessingResult
@@ -162,5 +167,161 @@ class UIManager(private val context: Context) {
      */
     fun showToast(message: String, duration: Int = Toast.LENGTH_LONG) {
         Toast.makeText(context, message, duration).show()
+    }
+
+    /**
+     * Initialize UI components
+     * @param components Map of UI component IDs to their corresponding views
+     * @param onShowNightSkyButtonClick Callback for when the show night sky button is clicked
+     * @return Map of initialized UI components
+     */
+    fun initializeUIComponents(
+        components: Map<String, View>,
+        onShowNightSkyButtonClick: () -> Unit
+    ): Map<String, View> {
+        // Extract UI components from the map
+        val tooBrightOverlay = components["tooBrightOverlay"] as FrameLayout
+        val showNightSkyButton = components["showNightSkyButton"] as Button
+        val exposureSlider = components["exposureSlider"] as Slider
+        val exposureTimeLabel = components["exposureTimeLabel"] as TextView
+        val astrometryTimeSlider = components["astrometryTimeSlider"] as Slider
+        val astrometryTimeLabel = components["astrometryTimeLabel"] as TextView
+
+        // Set up the show night sky button click listener
+        showNightSkyButton.setOnClickListener {
+            // Hide the button after it's pressed
+            showNightSkyButton.visibility = View.GONE
+            onShowNightSkyButtonClick()
+        }
+
+        // Initialize astrometryTimeSeconds from slider's initial value
+        val astrometryTimeSeconds = astrometryTimeSlider.value.toInt()
+        astrometryTimeLabel.text = "Astrometry time: ${astrometryTimeSeconds}s"
+
+        return components
+    }
+
+    /**
+     * Update exposure time label
+     * @param exposureTimeLabel The label to update
+     * @param exposureTimeNs The exposure time in nanoseconds
+     */
+    fun updateExposureTimeLabel(exposureTimeLabel: TextView, exposureTimeNs: Long) {
+        // Convert nanoseconds to milliseconds for display
+        val exposureTimeMs = exposureTimeNs / 1_000_000
+        exposureTimeLabel.text = "Exposure time: $exposureTimeMs ms"
+    }
+
+    /**
+     * Set up exposure slider
+     * @param exposureSlider The slider to set up
+     * @param exposureTimeLabel The label to update
+     * @param initialExposureTimeNs The initial exposure time in nanoseconds
+     * @param onExposureChanged Callback for when the exposure time changes
+     * @return Handler for exposure slider debounce
+     */
+    fun setupExposureSlider(
+        exposureSlider: Slider,
+        exposureTimeLabel: TextView,
+        initialExposureTimeNs: Long,
+        onExposureChanged: (Long) -> Unit
+    ): Handler {
+        // Initialize with initial value
+        updateExposureTimeLabel(exposureTimeLabel, initialExposureTimeNs)
+
+        // Create handler for debouncing
+        val exposureHandler = Handler(Looper.getMainLooper())
+        var exposureRunnable: Runnable? = null
+
+        exposureSlider.addOnChangeListener { _, value, fromUser ->
+            val exposureTimeNs = value.toLong()
+            updateExposureTimeLabel(exposureTimeLabel, exposureTimeNs)
+
+            // Only debounce if the change is from user interaction
+            if (fromUser) {
+                // Remove any pending runnables
+                exposureRunnable?.let { exposureHandler.removeCallbacks(it) }
+
+                // Create a new runnable for camera restart
+                exposureRunnable = Runnable {
+                    onExposureChanged(exposureTimeNs)
+                }.also {
+                    // Schedule the runnable after a delay (300ms)
+                    exposureHandler.postDelayed(it, 300)
+                }
+            } else {
+                // If programmatic change, restart immediately
+                onExposureChanged(exposureTimeNs)
+            }
+        }
+
+        return exposureHandler
+    }
+
+    /**
+     * Set up astrometry time slider
+     * @param astrometryTimeSlider The slider to set up
+     * @param astrometryTimeLabel The label to update
+     * @param onAstrometryTimeChanged Callback for when the astrometry time changes
+     */
+    fun setupAstrometryTimeSlider(
+        astrometryTimeSlider: Slider,
+        astrometryTimeLabel: TextView,
+        onAstrometryTimeChanged: (Int) -> Unit
+    ) {
+        astrometryTimeSlider.addOnChangeListener { _, value, _ ->
+            val astrometryTimeSeconds = value.toInt()
+            astrometryTimeLabel.text = "Astrometry time: ${astrometryTimeSeconds}s"
+            onAstrometryTimeChanged(astrometryTimeSeconds)
+        }
+    }
+
+    /**
+     * Set up buttons
+     * @param captureButton The capture button
+     * @param chooseButton The choose button
+     * @param onCaptureClick Callback for when the capture button is clicked
+     * @param onChooseClick Callback for when the choose button is clicked
+     */
+    fun setupButtons(
+        captureButton: Button,
+        chooseButton: Button,
+        onCaptureClick: () -> Unit,
+        onChooseClick: () -> Unit
+    ) {
+        captureButton.setOnClickListener { onCaptureClick() }
+        chooseButton.setOnClickListener { onChooseClick() }
+    }
+
+    /**
+     * Handle too bright overlay visibility
+     * @param tooBrightOverlay The overlay to show/hide
+     * @param isTooBright Whether the scene is too bright
+     */
+    fun handleTooBrightOverlay(tooBrightOverlay: FrameLayout, isTooBright: Boolean) {
+        if (isTooBright) {
+            // Scene is too bright, show the overlay
+            if (tooBrightOverlay.visibility != View.VISIBLE) {
+                ensureTooBrightOverlayContent(tooBrightOverlay)
+                tooBrightOverlay.visibility = View.VISIBLE
+            }
+        } else {
+            // Scene is not too bright, hide the overlay
+            if (tooBrightOverlay.visibility != View.GONE) {
+                tooBrightOverlay.visibility = View.GONE
+            }
+        }
+    }
+
+    /**
+     * Ensures that the too bright overlay has the original content (text and button)
+     * @param tooBrightOverlay The overlay to check
+     */
+    private fun ensureTooBrightOverlayContent(tooBrightOverlay: FrameLayout) {
+        // Only recreate the content if the overlay is empty
+        if (tooBrightOverlay.childCount == 0) {
+            // The overlay is defined in the layout XML, so we don't need to recreate it
+            // This method is just a safeguard in case the views were removed
+        }
     }
 }

@@ -1,95 +1,53 @@
-# StarApp Navigation Package
+# Navigation Module
 
 ## Overview
-
-The `com.starapp.navigation` package is the main package for the AstroNavigation Android application. This application determines geographical coordinates from night sky photographs without GPS or internet connectivity, using astronomical calculations and star pattern recognition.
-
-## Package Structure
-
-The package is organized into a modular structure for maintainability:
-
-```
-com.starapp.navigation/
-├── App.kt                  # Application class
-├── astro/                  # Astronomical calculations and processing
-├── camera/                 # Camera functionality
-├── file/                   # File operations
-├── gesture/                # Gesture handling
-├── image/                  # Image handling
-├── intent/                 # Intent handling
-├── location/               # Location and sensor handling
-├── navigation/             # Navigation handling
-├── permission/             # Permission handling
-├── result/                 # Result handling
-├── star/                   # Star processing
-├── ui/                     # UI components
-└── util/                   # Utility classes
-```
+The `com.starapp.navigation` package contains all components for the AstroNavigation Android application, handling UI, camera operations, image processing, and astronomical calculations.
 
 ## Key Components
 
-### UI Components
-- **MainActivity**: Entry point, handles camera preview and photo capture
-- **CropActivity**: Image cropping functionality
-- **ResultActivity**: Displays image with identified stars
-- **StarsActivity**: Processes astronomical data and displays star information
-- **LocationActivity**: Shows calculated coordinates and GPS comparison
+### UI Activities
+- **MainActivity**: Camera preview, photo capture, exposure settings
+- **CropActivity**: Image cropping for star detection
+- **ResultActivity**: Displays identified stars overlay
+- **StarsActivity**: Processes star data
+- **LocationActivity**: Shows calculated coordinates
 
 ### Core Managers
-- **AstrometryManager**: Runs the astrometry solver
-- **CameraManager**: Handles camera operations
-- **LocationManager**: Manages location calculations
-- **StarProcessingManager**: Processes star data for coordinate calculation
+- **AstrometryManager**: Star pattern identification and offline astrometry processing
+- **CameraManager**: Camera API 2 implementation with manual exposure control
+- **LocationHandler**: GPS and sensor data
+- **FileManager**: Image and data storage
 
-## Workflow
+## Module Structure
+```
+com.starapp.navigation/
+├── astro/       # Astronomical calculations
+├── camera/      # Camera functionality
+├── file/        # File operations
+├── gesture/     # Gesture handling
+├── image/       # Image processing
+├── intent/      # Intent handling
+├── location/    # Location services
+├── main/        # Main application logic
+├── navigation/  # Navigation components
+├── permission/  # Permission handling
+├── result/      # Result processing
+├── star/        # Star data processing
+├── ui/          # User interface
+└── util/        # Utilities
+```
 
-The application follows this workflow for determining geographical coordinates:
+## Application Flow
+1. **Capture**: Take photo with adjustable exposure
+2. **Process**: Crop image and identify star patterns
+3. **Calculate**: Determine coordinates from star positions
+4. **Display**: Show location and compare with GPS
 
-1. **Main Screen (MainActivity)**
-   - Display camera preview with exposure and astrometry time settings
-   - Capture photo or select existing image
-   - Record device orientation and GPS coordinates if available
+## Implementation
+The module implements offline astrometry processing by:
+1. Converting captured images to FITS format
+2. Running the astrometry-net solver locally on the device
+3. Extracting star patterns and matching against a local star catalog
+4. Calculating precise celestial coordinates from the identified patterns
+5. Converting astronomical coordinates to geographical position
 
-2. **Image Cropping (CropActivity)**
-   - Crop image symmetrically from center
-   - Adjust crop size by dragging rectangle edges
-   - Proceed with or skip cropping
-
-3. **Astrometry Solving**
-   - Convert image to FITS format
-   - Identify star patterns
-   - Extract star coordinates
-
-4. **Results Display (ResultActivity)**
-   - Show image with identified stars overlaid
-   - Continue if star identification was successful
-
-5. **Star Analysis (StarsActivity)**
-   - Process star data and create star clusters
-   - Display processing status and results
-
-6. **Location Display (LocationActivity)**
-   - Show calculated latitude and longitude
-   - Compare with GPS data if available
-   - Display distance between predicted and actual locations
-
-## Dependencies
-
-- AndroidX Camera and ExifInterface
-- Google Play Services Location
-- KotlinTranslation (core astronomical algorithms)
-- nom.tam.fits (FITS file operations)
-
-## Development Guidelines
-
-- Follow Kotlin coding conventions
-- Place new features in appropriate packages
-- Write unit tests for new functionality
-- Test on different devices and without internet connectivity
-
-## Troubleshooting
-
-- Ensure all required permissions are granted (camera, location, storage)
-- Check logcat for error messages
-- Verify astrometry solver configuration
-- Test with different images and conditions

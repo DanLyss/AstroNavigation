@@ -49,7 +49,12 @@ class CropActivity : AppCompatActivity() {
         gestureManager = GestureManager(this)
         gestureManager.initializeGestureDetector {
             // Cancel any running solver process before navigating back
-            com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
+            com.starapp.navigation.astro.AstrometryManager.cancelSolver(
+                onProgressReset = { progressBar.progress = 0 },
+                onProgressVisibilityChanged = { visible -> progressBar.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE },
+                onStatusReset = { statusText.text = "" },
+                onStatusVisibilityChanged = { visible -> statusText.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE }
+            )
             navigationManager.navigateBack(this)
         }
 
@@ -207,11 +212,22 @@ class CropActivity : AppCompatActivity() {
         // Use the manager to process the image with astrometry
         imageCropManager.processImageWithAstrometry(
             imagePath = path,
-            statusText = statusText,
-            progressBar = progressBar,
             currentLocation = currentLocation,
             currentAngles = currentAngles,
-            astrometryTimeSeconds = astrometryTimeSeconds
+            astrometryTimeSeconds = astrometryTimeSeconds,
+            onStatusUpdate = { message -> 
+                statusText.text = message 
+            },
+            onStatusVisibilityChanged = { visible -> 
+                statusText.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE 
+            },
+            onProgressUpdate = { progress, max -> 
+                progressBar.max = max
+                progressBar.progress = progress 
+            },
+            onProgressVisibilityChanged = { visible -> 
+                progressBar.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE 
+            }
         )
 
         // Don't finish the activity - let the solver run and show progress
@@ -230,13 +246,23 @@ class CropActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         // Cancel any running solver process when the activity is paused
-        com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
+        com.starapp.navigation.astro.AstrometryManager.cancelSolver(
+            onProgressReset = { progressBar.progress = 0 },
+            onProgressVisibilityChanged = { visible -> progressBar.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE },
+            onStatusReset = { statusText.text = "" },
+            onStatusVisibilityChanged = { visible -> statusText.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE }
+        )
     }
 
     override fun onDestroy() {
         super.onDestroy()
         // Cancel any running solver process when the activity is destroyed
-        com.starapp.navigation.astro.AstrometryManager.cancelSolver(progressBar, statusText)
+        com.starapp.navigation.astro.AstrometryManager.cancelSolver(
+            onProgressReset = { progressBar.progress = 0 },
+            onProgressVisibilityChanged = { visible -> progressBar.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE },
+            onStatusReset = { statusText.text = "" },
+            onStatusVisibilityChanged = { visible -> statusText.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE }
+        )
     }
 
     override fun onResume() {

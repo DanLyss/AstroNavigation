@@ -30,7 +30,7 @@ class StarProcessingManager(private val context: Context) {
         if (!imageFile.exists()) {
             return StarProcessingResult.Error("Image not found at $imagePath")
         }
-        
+
         val corrFile = File(corrPath)
         if (!corrFile.exists()) {
             return StarProcessingResult.Error("Corr file not found at $corrPath")
@@ -47,7 +47,15 @@ class StarProcessingManager(private val context: Context) {
         val yawDeg = angles.first
         val pitchDeg = angles.second
         val rollDeg = angles.third
-        val isoTime = ExifUtils.extractDateTime(exif)
+
+        // Extract date time - this may throw an exception if no valid datetime is found
+        val isoTime: String
+        try {
+            isoTime = ExifUtils.extractDateTime(exif)
+        } catch (e: IllegalArgumentException) {
+            Log.e("StarProcessingManager", "Error extracting datetime: ${e.message}", e)
+            return StarProcessingResult.Error("Cannot process photo without valid datetime: ${e.message}")
+        }
 
         // Ensure threshold is not greater than 1.0 to prevent crashes
         val safeThreshold = minOf(matchWeightThreshold, 0.999)
@@ -99,7 +107,7 @@ class StarProcessingManager(private val context: Context) {
         return buildString {
             appendLine("X size: size: ${result.width}")
             appendLine("Y size: size: ${result.height}")
-            appendLine("Computed time: ${result.isoTime}")
+            appendLine("Time: ${result.isoTime}")
             appendLine("Yaw:   ${result.yawDeg}°")
             appendLine("Pitch: ${result.pitchDeg}°")
             appendLine("Roll:  ${result.rollDeg}°")

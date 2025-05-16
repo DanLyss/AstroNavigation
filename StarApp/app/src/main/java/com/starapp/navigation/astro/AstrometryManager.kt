@@ -5,8 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.widget.TextView
-import android.widget.ProgressBar
 import com.starapp.navigation.file.FileManager
 import com.starapp.navigation.ui.ResultActivity
 import java.io.File
@@ -50,22 +48,32 @@ class AstrometryManager {
         /**
          * Runs the astrometry solver on an image file.
          * Heavy work is moved to a background thread to keep the UI responsive.
+         * 
+         * @param context The application context
+         * @param imageFile The image file to process
+         * @param astroPath The path to the astrometry files
+         * @param currentLocation The current location string
+         * @param currentAngles The current angles string
+         * @param cpuTimeLimit The CPU time limit for the solver in seconds
+         * @param onStatusUpdate Callback for updating status text
+         * @param onProgressUpdate Callback for updating progress bar
+         * @param onProgressVisibilityChanged Callback for changing progress bar visibility
          */
         fun runSolver(
             context: Context,
             imageFile: File,
             astroPath: String,
-            statusText: TextView,
-            progressBar: ProgressBar,
             currentLocation: String,
             currentAngles: String,
-            cpuTimeLimit: Int = 100
+            cpuTimeLimit: Int = 100,
+            onStatusUpdate: (String) -> Unit,
+            onProgressUpdate: (Int, Int) -> Unit, // (progress, max)
+            onProgressVisibilityChanged: (Boolean) -> Unit
         ) {
             // Prepare progress bar
             val maxTimeSeconds = (cpuTimeLimit * 1.2).toInt()
-            progressBar.max = 100
-            progressBar.progress = 0
-            progressBar.visibility = ProgressBar.VISIBLE
+            onProgressUpdate(0, 100)
+            onProgressVisibilityChanged(true)
 
             // Start timer to update progress bar by elapsed time
             val startTime = System.currentTimeMillis()
@@ -76,7 +84,7 @@ class AstrometryManager {
                     val percent = ((elapsedSec.toFloat() / maxTimeSeconds) * 100)
                         .toInt()
                         .coerceIn(0, 100)
-                    progressBar.progress = percent
+                    onProgressUpdate(percent, 100)
                     if (percent < 100) {
                         handler.postDelayed(this, 100)
                     }
@@ -94,7 +102,7 @@ class AstrometryManager {
                 try {
                     // Step 1: convert image to FITS
                     handler.post {
-                        statusText.text = "Converting image to FITS format..."
+                        onStatusUpdate("Converting image to FITS format...")
                     }
                     val bitmap = android.provider.MediaStore.Images.Media
                         .getBitmap(context.contentResolver, Uri.fromFile(imageFile))
@@ -103,7 +111,7 @@ class AstrometryManager {
 
                     // Step 2: start the astrometry solver process
                     handler.post {
-                        statusText.text = "Starting astrometry solver..."
+                        onStatusUpdate("Starting astrometry solver...")
                     }
                     val cmd = listOf(
                         "sh", "-c",
@@ -131,13 +139,13 @@ class AstrometryManager {
                                 handler.post {
                                     when {
                                         line.contains("Reading input file") ->
-                                            statusText.text = "Reading input file..."
+                                            onStatusUpdate("Reading input file...")
                                         line.contains("Extracting sources") ->
-                                            statusText.text = "Extracting stars from image..."
+                                            onStatusUpdate("Extracting stars from image...")
                                         line.contains("Solving...") ->
-                                            statusText.text = "Solving star pattern..."
+                                            onStatusUpdate("Solving star pattern...")
                                         line.contains("Solving field") ->
-                                            statusText.text = "Finalizing solution..."
+                                            onStatusUpdate("Finalizing solution...")
                                     }
                                 }
                             }
@@ -157,11 +165,11 @@ class AstrometryManager {
                     handler.post {
                         if (!finished) {
                             process.destroy()
-                            statusText.text = "⚠️ Solver timed out"
+                            onStatusUpdate("⚠️ Solver timed out")
                         } else if (process.exitValue() != 0) {
-                            statusText.text = "⚠️ Solver failed with code ${process.exitValue()}"
+                            onStatusUpdate("⚠️ Solver failed with code ${process.exitValue()}")
                         } else {
-                            statusText.text = "✅ Solution found!"
+                            onStatusUpdate("✅ Solution found!")
                         }
                     }
 
@@ -173,7 +181,7 @@ class AstrometryManager {
 
                 } catch (e: Exception) {
                     handler.post {
-                        statusText.text = "❌ Solver error: ${e.message}"
+                        onStatusUpdate("❌ Solver error: ${e.message}")
                     }
                     handler.postDelayed({
                         navigateToResultActivity(context, imageFile, currentLocation)
@@ -188,7 +196,7 @@ class AstrometryManager {
                     if (currentProcess?.isAlive == true) {
                         currentProcess?.destroy()
                         handler.post {
-                            statusText.text = "⚠️ Processing timed out"
+                            onStatusUpdate("⚠️ Processing timed out")
                         }
                         handler.postDelayed({
                             navigateToResultActivity(context, imageFile, currentLocation)
@@ -217,8 +225,18 @@ class AstrometryManager {
 
         /**
          * Cancel any running solver process and cleanup.
+         * 
+         * @param onProgressReset Callback for resetting progress bar
+         * @param onProgressVisibilityChanged Callback for changing progress bar visibility
+         * @param onStatusReset Callback for resetting status text
+         * @param onStatusVisibilityChanged Callback for changing status text visibility
          */
-        fun cancelSolver(progressBar: ProgressBar? = null, statusText: TextView? = null) {
+        fun cancelSolver(
+            onProgressReset: (() -> Unit)? = null,
+            onProgressVisibilityChanged: ((Boolean) -> Unit)? = null,
+            onStatusReset: (() -> Unit)? = null,
+            onStatusVisibilityChanged: ((Boolean) -> Unit)? = null
+        ) {
             // Remove pending UI updates
             currentProgressUpdater?.let { currentHandler?.removeCallbacks(it) }
 
@@ -226,14 +244,10 @@ class AstrometryManager {
             currentProcess?.takeIf { it.isAlive }?.destroy()
 
             // Reset UI
-            progressBar?.apply {
-                progress = 0
-                visibility = ProgressBar.INVISIBLE
-            }
-            statusText?.apply {
-                text = ""
-                visibility = TextView.INVISIBLE
-            }
+            onProgressReset?.invoke()
+            onProgressVisibilityChanged?.invoke(false)
+            onStatusReset?.invoke()
+            onStatusVisibilityChanged?.invoke(false)
 
             // Clear references
             currentProcess = null

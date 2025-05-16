@@ -6,8 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.RectF
 import android.os.Handler
 import android.os.Looper
-import android.view.View
-import android.widget.TextView
 import androidx.exifinterface.media.ExifInterface
 import com.starapp.navigation.astro.AstrometryManager
 import com.starapp.navigation.util.ExifUtils
@@ -111,7 +109,7 @@ class ImageCropManager(private val context: Context) {
                     }
 
                     // Copy EXIF data from original image to cropped image
-                    copyExifData(imagePath, croppedFile.absolutePath, currentAngles, currentLocation)
+                    copyExifData(imagePath, croppedFile.absolutePath)
 
                     croppedFile.absolutePath
                 }
@@ -170,7 +168,7 @@ class ImageCropManager(private val context: Context) {
             }
 
             // Copy EXIF data from original image to cropped image
-            copyExifData(imagePath, croppedFile.absolutePath, currentAngles, currentLocation)
+            copyExifData(imagePath, croppedFile.absolutePath)
 
             return croppedFile.absolutePath
         } catch (e: Exception) {
@@ -188,9 +186,7 @@ class ImageCropManager(private val context: Context) {
      */
     private fun copyExifData(
         originalImagePath: String,
-        croppedImagePath: String,
-        currentAngles: String,
-        currentLocation: String
+        croppedImagePath: String
     ) {
         try {
             // Read EXIF from original image
@@ -210,11 +206,6 @@ class ImageCropManager(private val context: Context) {
 
             // Save the EXIF changes
             croppedExif.saveAttributes()
-
-            // Alternatively, we can use ExifUtils to save the data directly
-            if (currentAngles != "unknown") {
-                ExifUtils.saveExifData(croppedImagePath, currentAngles, currentLocation, Date())
-            }
         } catch (e: Exception) {
             e.printStackTrace()
             // Continue even if EXIF copying fails
@@ -234,35 +225,40 @@ class ImageCropManager(private val context: Context) {
     /**
      * Processes the image with the astrometry solver
      * @param imagePath Path to the image to process
-     * @param statusText TextView to update with status messages
-     * @param progressBar ProgressBar to show solver progress
      * @param currentLocation Current location string
      * @param currentAngles Current angles string
      * @param astrometryTimeSeconds Maximum astrometry processing time in seconds
+     * @param onStatusUpdate Callback for updating status text
+     * @param onStatusVisibilityChanged Callback for changing status text visibility
+     * @param onProgressUpdate Callback for updating progress bar
+     * @param onProgressVisibilityChanged Callback for changing progress bar visibility
      */
     fun processImageWithAstrometry(
         imagePath: String,
-        statusText: TextView,
-        progressBar: android.widget.ProgressBar,
         currentLocation: String,
         currentAngles: String,
-        astrometryTimeSeconds: Int = 100
+        astrometryTimeSeconds: Int = 100,
+        onStatusUpdate: (String) -> Unit,
+        onStatusVisibilityChanged: (Boolean) -> Unit,
+        onProgressUpdate: (Int, Int) -> Unit,
+        onProgressVisibilityChanged: (Boolean) -> Unit
     ) {
         // Make status text and progress bar visible
-        statusText.visibility = View.VISIBLE
-        progressBar.visibility = View.VISIBLE
-        statusText.text = "Starting astrometry solver..."
+        onStatusVisibilityChanged(true)
+        onProgressVisibilityChanged(true)
+        onStatusUpdate("Starting astrometry solver...")
 
         // Run the astrometry solver on the image
         AstrometryManager.runSolver(
             context = context,
             imageFile = File(imagePath),
             astroPath = File(imagePath).parent ?: "",
-            statusText = statusText,
-            progressBar = progressBar,
             currentLocation = currentLocation,
             currentAngles = currentAngles,
-            cpuTimeLimit = astrometryTimeSeconds
+            cpuTimeLimit = astrometryTimeSeconds,
+            onStatusUpdate = onStatusUpdate,
+            onProgressUpdate = onProgressUpdate,
+            onProgressVisibilityChanged = onProgressVisibilityChanged
         )
     }
 }

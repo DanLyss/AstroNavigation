@@ -1,15 +1,26 @@
 package com.starapp.navigation.ui
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.util.Log
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
+import androidx.exifinterface.media.ExifInterface
+import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.view.PreviewView
 import com.google.android.material.slider.Slider
 import com.starapp.navigation.R
@@ -23,11 +34,14 @@ import com.starapp.navigation.main.MainManager
 import com.starapp.navigation.navigation.NavigationManager
 import com.starapp.navigation.permission.PermissionManager
 import com.starapp.navigation.ui.manager.UIManager
+import com.starapp.navigation.util.ExifUtils
 import java.io.*
+import java.util.Date
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+@ExperimentalGetImage
 class MainActivity : AppCompatActivity() {
 
     // UI components
@@ -40,6 +54,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var captureButton: Button
     private lateinit var chooseButton: Button
+
+    // Too bright overlay components
+    private lateinit var tooBrightOverlay: FrameLayout
+    private lateinit var showNightSkyButton: Button
+
+    // Image analysis for brightness detection
+    private var imageAnalysis: ImageAnalysis? = null
+    private val brightnessThreshold = CameraManager.BRIGHTNESS_THRESHOLD // Threshold for detecting too bright scenes
 
     // Camera-related
     private lateinit var cameraExecutor: ExecutorService
@@ -76,14 +98,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Initialize managers first to ensure they're available for UI components
+        initializeManagers()
+
         // Initialize UI components
         initializeUIComponents()
 
         // Initialize location and sensor handlers
         initializeLocationAndSensors()
-
-        // Initialize managers
-        initializeManagers()
 
         // Initialize directories and extract assets
         initializeFileSystem()
@@ -112,23 +134,67 @@ class MainActivity : AppCompatActivity() {
         captureButton = findViewById(R.id.captureButton)
         chooseButton = findViewById(R.id.chooseButton)
 
-        // Initialize exposureTimeNs from slider's initial value and update label
+        // Initialize too bright overlay components
+        tooBrightOverlay = findViewById(R.id.tooBrightOverlay)
+        showNightSkyButton = findViewById(R.id.showNightSkyButton)
+
+        // Create a map of UI components for the UIManager
+        val components = mapOf(
+            "previewView" to previewView,
+            "exposureSlider" to exposureSlider,
+            "exposureTimeLabel" to exposureTimeLabel,
+            "astrometryTimeSlider" to astrometryTimeSlider,
+            "astrometryTimeLabel" to astrometryTimeLabel,
+            "statusText" to statusText,
+            "progressBar" to progressBar,
+            "captureButton" to captureButton,
+            "chooseButton" to chooseButton,
+            "tooBrightOverlay" to tooBrightOverlay,
+            "showNightSkyButton" to showNightSkyButton
+        )
+
+        // Initialize UI components using UIManager
+        uiManager.initializeUIComponents(components) {
+            showNightSkyImage()
+        }
+
+        // Initialize exposureTimeNs from slider's initial value
         exposureTimeNs = exposureSlider.value.toLong()
-        updateExposureTimeLabel()
 
         // Initialize astrometryTimeSeconds from slider's initial value
         astrometryTimeSeconds = astrometryTimeSlider.value.toInt()
-        astrometryTimeLabel.text = "Astrometry time: ${astrometryTimeSeconds}s"
 
         cameraExecutor = Executors.newSingleThreadExecutor()
         progressBar.max = 100
         progressBar.progress = 0
     }
 
+
+    private fun showNightSkyImage() {
+        // Use ImageSelectionManager to handle night sky image
+        imageSelectionManager.showNightSkyImage(
+            onStatusUpdate = { message -> 
+                statusText.text = message 
+            },
+            onComplete = { success ->
+                // Hide the overlay
+                tooBrightOverlay.visibility = View.GONE
+
+                // Show success or error message
+                if (success) {
+                    uiManager.showToast("Image saved to gallery successfully")
+                } else {
+                    uiManager.showToast("Error saving image to gallery")
+                }
+
+                // Restart camera
+                restartCameraWithExposure()
+            }
+        )
+    }
+
     private fun updateExposureTimeLabel() {
-        // Convert nanoseconds to milliseconds for display
-        val exposureTimeMs = exposureTimeNs / 1_000_000
-        exposureTimeLabel.text = "Exposure time: $exposureTimeMs ms"
+        uiManager.updateExposureTimeLabel(exposureTimeLabel, exposureTimeNs)
     }
 
     private fun initializeManagers() {
@@ -136,35 +202,27 @@ class MainActivity : AppCompatActivity() {
         imageSelectionManager = ImageSelectionManager(this)
         intentManager = IntentManager()
         uiManager = UIManager(this)
-        mainManager = MainManager(statusText) { currentLocation }
+        mainManager = MainManager(
+            getLocation = { currentLocation },
+            onStatusUpdate = { text -> statusText.text = text }
+        )
     }
 
     private fun initializeFileSystem() {
-        // Show a loading indicator or message if needed
-        statusText.text = "Initializing..."
-
-        // Use a background thread for file operations
-        Thread {
-            try {
-                FileManager.createDirectories(astroPath)
-                FileManager.extractZipAssets(this, astroPath)
-                FileManager.generateAstrometryConfig(astroPath)
-
-                // Update UI on main thread when done
-                runOnUiThread {
-                    statusText.text = ""
+        // Use FileManager to initialize the file system
+        FileManager.initializeFileSystem(
+            context = this,
+            astroPath = astroPath,
+            onStatusUpdate = { message -> statusText.text = message },
+            onComplete = { success ->
+                if (success) {
                     // Start camera preview after file system is initialized
                     if (permissionManager.areAllPermissionsGranted()) {
                         restartCameraWithExposure()
                     }
                 }
-            } catch (e: Exception) {
-                // Handle errors on main thread
-                runOnUiThread {
-                    statusText.text = "Initialization error: ${e.message}"
-                }
             }
-        }.start()
+        )
     }
 
     private fun initializeLocationAndSensors() {
@@ -218,17 +276,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupButtons() {
-        // Set up capture button
-        captureButton.setOnClickListener {
-            currentAngles = sensorHandler.getLatestAngles()
-            takePhoto()
-        }
-
-        // Set up choose button
-        chooseButton.setOnClickListener {
-            val intent = intentManager.createGallerySelectionIntent()
-            startActivityForResult(intent, PICK_IMAGE_REQUEST_CODE)
-        }
+        // Set up buttons using UIManager
+        uiManager.setupButtons(
+            captureButton = captureButton,
+            chooseButton = chooseButton,
+            onCaptureClick = {
+                currentAngles = sensorHandler.getLatestAngles()
+                takePhoto()
+            },
+            onChooseClick = {
+                val intent = intentManager.createGallerySelectionIntent()
+                startActivityForResult(intent, PICK_IMAGE_REQUEST_CODE)
+            }
+        )
     }
 
     private fun takePhoto() {
@@ -248,20 +308,24 @@ class MainActivity : AppCompatActivity() {
             context = this,
             imageCapture = imageCapture,
             outputFile = photoFile,
-            statusText = statusText,
             currentLocation = currentLocation,
-            sensorHandler = sensorHandler
-        ) { file, capturedAngles ->
-            // Navigate to CropActivity instead of running solver directly
-            // Use the angles captured at the moment the photo was taken
-            NavigationManager().navigateToCropActivity(
-                activity = this,
-                imagePath = file.absolutePath,
-                currentLocation = currentLocation,
-                currentAngles = capturedAngles,
-                astrometryTimeSeconds = astrometryTimeSeconds
-            )
-        }
+            sensorHandler = sensorHandler,
+            onStatusUpdate = { message -> statusText.text = message },
+            onPhotoSaved = { file, capturedAngles ->
+                // Navigate to CropActivity instead of running solver directly
+                // Use the angles captured at the moment the photo was taken
+                NavigationManager().navigateToCropActivity(
+                    activity = this,
+                    imagePath = file.absolutePath,
+                    currentLocation = currentLocation,
+                    currentAngles = capturedAngles,
+                    astrometryTimeSeconds = astrometryTimeSeconds
+                )
+            },
+            onCaptureError = { errorMessage ->
+                uiManager.showToast(errorMessage)
+            }
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -288,10 +352,15 @@ class MainActivity : AppCompatActivity() {
         imageSelectionManager.processSelectedImage(
             uri = uri,
             destFile = destFile,
-            statusText = statusText,
             currentLocation = currentLocation,
+            onStatusUpdate = { message -> 
+                statusText.text = message 
+            },
             onSuccess = { angles: String ->
                 currentAngles = angles
+            },
+            onError = { errorMessage ->
+                uiManager.showToast(errorMessage)
             }
         )
     }
@@ -310,13 +379,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+    @ExperimentalGetImage
     private fun restartCameraWithExposure() {
-        CameraManager.restartCameraWithExposure(
+        // Hide the too bright overlay when restarting camera
+        tooBrightOverlay.visibility = View.GONE
+
+        // Set up image analysis for brightness detection
+        setupImageAnalysis()
+
+        CameraManager.restartCameraWithExposureAndAnalysis(
             activity = this,
             previewView = previewView,
-            exposureTimeNs = exposureTimeNs
-        ) { capture ->
-            imageCapture = capture
+            exposureTimeNs = exposureTimeNs,
+            imageAnalysis = imageAnalysis,
+            onImageCaptureReady = { capture ->
+                imageCapture = capture
+            },
+            onError = { errorMessage ->
+                uiManager.showToast(errorMessage)
+            }
+        )
+    }
+
+    @ExperimentalGetImage
+    private fun setupImageAnalysis() {
+        // Create image analysis use case if it doesn't exist
+        if (imageAnalysis == null) {
+            // Use CameraManager to set up image analysis
+            imageAnalysis = CameraManager.setupImageAnalysis(
+                cameraExecutor = cameraExecutor,
+                onBrightnessAnalyzed = { isTooBright ->
+                    runOnUiThread {
+                        // Use UIManager to handle too bright overlay
+                        uiManager.handleTooBrightOverlay(tooBrightOverlay, isTooBright)
+                    }
+                }
+            )
         }
     }
 

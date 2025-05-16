@@ -2,7 +2,6 @@ package com.starapp.navigation.file
 
 import android.content.Context
 import android.os.Environment
-import android.widget.Toast
 import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
@@ -16,6 +15,44 @@ class FileManager {
 
         // Shared thread pool for file operations
         private val fileExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+
+        /**
+         * Initializes the file system for the application
+         * @param context The application context
+         * @param astroPath The path to the astrometry files
+         * @param onStatusUpdate Callback for updating status
+         * @param onComplete Callback for when initialization is complete
+         */
+        fun initializeFileSystem(
+            context: Context,
+            astroPath: String,
+            onStatusUpdate: (String) -> Unit,
+            onComplete: (Boolean) -> Unit
+        ) {
+            // Show a loading indicator or message
+            onStatusUpdate("Initializing...")
+
+            // Use a background thread for file operations
+            fileExecutor.execute {
+                try {
+                    createDirectories(astroPath)
+                    extractZipAssets(context, astroPath)
+                    generateAstrometryConfig(astroPath)
+
+                    // Update UI on main thread when done
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        onStatusUpdate("")
+                        onComplete(true)
+                    }
+                } catch (e: Exception) {
+                    // Handle errors on main thread
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        onStatusUpdate("Initialization error: ${e.message}")
+                        onComplete(false)
+                    }
+                }
+            }
+        }
 
         /**
          * Cleans up old .corr files in the output directory synchronously
@@ -44,8 +81,15 @@ class FileManager {
          * Saves a file to the Downloads directory synchronously
          * @param context The application context
          * @param sourceFile The source file to save
+         * @param onSuccess Callback for successful save
+         * @param onError Callback for error handling
          */
-        fun saveFileToDownloads(context: Context, sourceFile: File) {
+        fun saveFileToDownloads(
+            context: Context, 
+            sourceFile: File,
+            onSuccess: (String) -> Unit = {},
+            onError: (String) -> Unit = {}
+        ) {
             try {
                 val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 if (!downloadsFolder.exists()) {
@@ -54,9 +98,9 @@ class FileManager {
                 val destFile = File(downloadsFolder, sourceFile.name)
                 sourceFile.copyTo(destFile, overwrite = true)
 
-                Toast.makeText(context, "✅ File saved: ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
+                onSuccess("✅ File saved: ${destFile.absolutePath}")
             } catch (e: Exception) {
-                Toast.makeText(context, "❌ Save error: ${e.message}", Toast.LENGTH_LONG).show()
+                onError("❌ Save error: ${e.message}")
             }
         }
 
@@ -64,9 +108,17 @@ class FileManager {
          * Saves a file to the Downloads directory asynchronously
          * @param context The application context
          * @param sourceFile The source file to save
+         * @param onSuccess Callback for successful save
+         * @param onError Callback for error handling
          * @param onComplete Optional callback to be executed when save is complete
          */
-        fun saveFileToDownloadsAsync(context: Context, sourceFile: File, onComplete: ((success: Boolean) -> Unit)? = null) {
+        fun saveFileToDownloadsAsync(
+            context: Context, 
+            sourceFile: File, 
+            onSuccess: (String) -> Unit = {},
+            onError: (String) -> Unit = {},
+            onComplete: ((success: Boolean) -> Unit)? = null
+        ) {
             fileExecutor.execute {
                 try {
                     val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -76,16 +128,16 @@ class FileManager {
                     val destFile = File(downloadsFolder, sourceFile.name)
                     sourceFile.copyTo(destFile, overwrite = true)
 
-                    // Show toast on main thread
+                    // Call success callback on main thread
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        Toast.makeText(context, "✅ File saved: ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
+                        onSuccess("✅ File saved: ${destFile.absolutePath}")
                     }
 
                     onComplete?.invoke(true)
                 } catch (e: Exception) {
-                    // Show error on main thread
+                    // Call error callback on main thread
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
-                        Toast.makeText(context, "❌ Save error: ${e.message}", Toast.LENGTH_LONG).show()
+                        onError("❌ Save error: ${e.message}")
                     }
 
                     onComplete?.invoke(false)

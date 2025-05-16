@@ -55,9 +55,8 @@ object ExifUtils {
             ?: exif.getAttribute(ExifInterface.TAG_DATETIME)
 
         if (dtString == null) {
-            Log.w(TAG, "No EXIF date/time found, using current time")
-            // Use current time as fallback
-            return java.time.OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            Log.e(TAG, "No EXIF date/time found, cannot proceed with photo without datetime mark")
+            throw IllegalArgumentException("Photo does not have a datetime mark")
         }
 
         try {
@@ -67,8 +66,8 @@ object ExifUtils {
             val odt = ldt.atZone(ZoneId.systemDefault()).toOffsetDateTime()
             return odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         } catch (e: Exception) {
-            Log.w(TAG, "Error parsing EXIF date/time: ${e.message}, using current time")
-            return java.time.OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            Log.e(TAG, "Error parsing EXIF date/time: ${e.message}, cannot proceed with photo without valid datetime mark")
+            throw IllegalArgumentException("Failed to parse photo datetime mark: ${e.message}")
         }
     }
 

@@ -3,7 +3,6 @@ package com.starapp.navigation.result
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.widget.Toast
 import com.starapp.navigation.astro.FitsManager
 import java.io.File
 
@@ -15,14 +14,15 @@ class ResultManager(private val context: Context) {
     /**
      * Loads an image from the given path
      * @param imagePath Path to the image file
+     * @param onError Callback for error handling
      * @return Bitmap if successful, null otherwise
      */
-    fun loadImage(imagePath: String): Bitmap? {
+    fun loadImage(imagePath: String, onError: (String) -> Unit = {}): Bitmap? {
         val file = File(imagePath)
         return if (file.exists()) {
             BitmapFactory.decodeFile(imagePath)
         } else {
-            Toast.makeText(context, "Image file not found", Toast.LENGTH_SHORT).show()
+            onError("Image file not found")
             null
         }
     }
@@ -30,9 +30,10 @@ class ResultManager(private val context: Context) {
     /**
      * Extracts star coordinates from a .corr file
      * @param imagePath Path to the image file
+     * @param onError Callback for error handling
      * @return List of star points (x, y coordinates) if successful, empty list otherwise
      */
-    fun extractStarCoordinates(imagePath: String): List<Pair<Float, Float>> {
+    fun extractStarCoordinates(imagePath: String, onError: (String) -> Unit = {}): List<Pair<Float, Float>> {
         // First try with the image name
         val corrPath = File(imagePath).nameWithoutExtension + ".corr"
         val corrFile = File(context.filesDir, "astro/output/$corrPath")
@@ -45,7 +46,7 @@ class ResultManager(private val context: Context) {
                 try {
                     FitsManager.extractStarCoordinates(corrFile)
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Error reading .corr file: ${e.message}", Toast.LENGTH_LONG).show()
+                    onError("Error reading .corr file: ${e.message}")
                     emptyList()
                 }
             }
@@ -53,12 +54,12 @@ class ResultManager(private val context: Context) {
                 try {
                     FitsManager.extractStarCoordinates(inputCorrFile)
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Error reading input.corr file: ${e.message}", Toast.LENGTH_LONG).show()
+                    onError("Error reading input.corr file: ${e.message}")
                     emptyList()
                 }
             }
             else -> {
-                Toast.makeText(context, ".corr files not found", Toast.LENGTH_SHORT).show()
+                onError(".corr files not found")
                 emptyList()
             }
         }
@@ -100,4 +101,3 @@ class ResultManager(private val context: Context) {
         }
     }
 }
-

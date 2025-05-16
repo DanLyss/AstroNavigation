@@ -2,17 +2,16 @@ package com.starapp.navigation.main
 
 import android.os.Handler
 import android.os.Looper
-import android.widget.TextView
 
 
 /**
  * Manager class for main screen
- * @param statusText   the TextView to update
- * @param getLocation  lambda that returns the current location string
+ * @param getLocation lambda that returns the current location string
+ * @param onStatusUpdate callback for updating status text
  */
 class MainManager(
-    private val statusText: TextView,
-    private val getLocation: () -> String
+    private val getLocation: () -> String,
+    private val onStatusUpdate: (String) -> Unit
 ) {
     private val handler = Handler(Looper.getMainLooper())
 
@@ -20,11 +19,12 @@ class MainManager(
     private val tick = object : Runnable {
         override fun run() {
             val loc = getLocation()
-            statusText.text = if (loc == "unknown") {
+            val statusText = if (loc == "unknown") {
                 "✨ Searching for location… Wait or proceed without it"
             } else {
                 "📍 Location found: $loc"
             }
+            onStatusUpdate(statusText)
             handler.postDelayed(this, 100L)
         }
     }

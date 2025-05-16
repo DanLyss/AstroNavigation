@@ -36,7 +36,7 @@ class PermissionManager(private val context: Context) {
         val permissionsToRequest = neededPermissions.filter {
             ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
         }
-        
+
         if (permissionsToRequest.isNotEmpty()) {
             ActivityCompat.requestPermissions(
                 activity,
@@ -67,7 +67,8 @@ class PermissionManager(private val context: Context) {
             Manifest.permission.CAMERA,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.READ_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     }
 }

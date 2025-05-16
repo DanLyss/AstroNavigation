@@ -86,35 +86,32 @@ class ExifUtilsTest {
     }
 
     @Test
-    fun extractDateTime_missingDateTime_returnsCurrentTime() {
+    fun extractDateTime_missingDateTime_throwsException() {
         // Arrange
         `when`(mockExif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)).thenReturn(null)
         `when`(mockExif.getAttribute(ExifInterface.TAG_DATETIME)).thenReturn(null)
 
-        // Act
-        val isoTime = ExifUtils.extractDateTime(mockExif)
+        // Act & Assert
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            ExifUtils.extractDateTime(mockExif)
+        }
 
-        // Assert - should return a non-empty string
-        assertTrue(isoTime.isNotEmpty())
-
-        // Basic validation that it looks like a date
-        assertTrue(isoTime.contains("-") && isoTime.contains(":") && isoTime.contains("T"))
+        // Verify exception message
+        assertEquals("Photo does not have a datetime mark", exception.message)
     }
 
     @Test
-    fun extractDateTime_invalidFormat_returnsCurrentTime() {
+    fun extractDateTime_invalidFormat_throwsException() {
         // Arrange
         val invalidDateTime = "Invalid date format"
         `when`(mockExif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)).thenReturn(invalidDateTime)
 
-        // Act
-        val isoTime = ExifUtils.extractDateTime(mockExif)
+        // Act & Assert
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            ExifUtils.extractDateTime(mockExif)
+        }
 
-        // Assert - should return a non-empty string
-        assertTrue(isoTime.isNotEmpty())
-
-        // Basic validation that it looks like a date
-        assertTrue(isoTime.contains("-") && isoTime.contains(":") && isoTime.contains("T"))
+        // Verify exception message contains the expected text
+        assertTrue(exception.message?.contains("Failed to parse photo datetime mark") == true)
     }
 }
-
