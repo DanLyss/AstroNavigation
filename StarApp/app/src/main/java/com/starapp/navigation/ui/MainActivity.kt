@@ -427,6 +427,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        locationHandler.startListening { location ->
+            currentLocation = "${location.latitude}, ${location.longitude}"
+        }
         sensorHandler.startListening()
         mainManager.start()
     }
